@@ -59,7 +59,6 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
           formats={['avif', 'webp']}
           alt="Me and my girlfriend smiling at a table at a wedding reception"
         />
-        <figcaption>With my girlfriend at a wedding</figcaption>
       </figure>
       <div class="about-copy" data-reveal style="--d:1">
         <p class="eyebrow">About me</p>
@@ -223,7 +222,6 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     border-radius: var(--radius);
     box-shadow: 0 30px 60px -36px rgba(0, 0, 0, 0.55);
   }
-  .about-photo figcaption { margin-top: 12px; font-size: 0.85rem; color: var(--muted); font-style: italic; font-family: var(--serif); }
   .about-copy p:not(.eyebrow) { color: var(--muted); font-size: 1.05rem; }
   @media (max-width: 820px) {
     .about-grid { grid-template-columns: 1fr; gap: 28px; }
