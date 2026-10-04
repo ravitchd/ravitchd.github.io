@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import RecipeCard from '../components/RecipeCard.astro';
+import Helix from '../components/Helix.astro';
 import { SITE } from '../site';
 
 const projects = (await getCollection('projects'))
@@ -44,8 +45,10 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
         {SITE.github && <a class="btn" href={SITE.github}>GitHub</a>}
       </div>
     </div>
-    <a class="scroll-cue" href="#work" aria-label="Scroll to projects"><span></span></a>
+    <a class="scroll-cue" href="#story" aria-label="Scroll to my story"><span></span></a>
   </section>
+
+  <Helix />
 
   <section class="section" id="work">
     <div class="container">
