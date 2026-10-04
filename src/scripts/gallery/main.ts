@@ -206,7 +206,6 @@ export function initGallery() {
     /* Focus label: the dish in the middle (or under the cursor) */
     let shownFocus = -1;
     let focusTimer = 0;
-    let lastFocusAt = 0;
     const splitInto = (el: HTMLElement, text: string) => {
       el.querySelectorAll('.g-t:not(.out)').forEach((old) => {
         old.classList.add('out');
@@ -242,7 +241,6 @@ export function initGallery() {
     const showFocus = (i: number) => {
       if (i === shownFocus) return;
       shownFocus = i;
-      lastFocusAt = performance.now();
       const d = dishes[i];
       focusNo.textContent = `Nº ${d.no}`;
       focusTags.textContent = d.tags.join(' · ');
@@ -251,9 +249,10 @@ export function initGallery() {
       if (glow[i]) stageEl.style.setProperty('--g-glow', glow[i]);
       if (kbd) liveEl.textContent = `Nº ${d.no}, ${d.title}`;
     };
+    // Wait for the wall to settle on a dish, so a fast fling doesn't flicker through names.
     const onFocus = (i: number) => {
       clearTimeout(focusTimer);
-      focusTimer = window.setTimeout(() => showFocus(i), Math.max(0, 170 - (performance.now() - lastFocusAt)));
+      focusTimer = window.setTimeout(() => showFocus(i), 160);
     };
 
     /* Custom cursor */

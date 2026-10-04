@@ -70,12 +70,15 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
   const caption = dlg.querySelector<HTMLElement>('.lb-caption')!;
   const tags = dlg.querySelector<HTMLElement>('.lb-tags')!;
   const recipe = dlg.querySelector<HTMLAnchorElement>('.lb-recipe')!;
+  const buttons = [...dlg.querySelectorAll<HTMLElement>('.lb-btn')];
   const root = document.documentElement;
   const n = dishes.length;
   const large = new Set<number>();
   let cur = -1;
   let src: ViewerSource | null = null;
   let busy = false;
+  // A close asked for while the photo is still moving happens as soon as it stops.
+  let closeAfter = false;
   let live: Animation[] = [];
   let finished = true;
 
@@ -138,13 +141,23 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
       from
         ? img.animate([flip(from, to), REST], { duration: 820, easing: EASE_OUT })
         : img.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' }),
-      ...textIn(from ? 260 : 60),
     ];
+    textIn(from ? 260 : 60);
+    buttons.forEach((el) =>
+      el.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: opts.reduce ? 200 : 500,
+        delay: opts.reduce ? 0 : 300,
+        easing: 'ease-out',
+        fill: 'backwards',
+      }),
+    );
+    // The text can finish arriving on its own; closing only has to wait for the photo.
     await done(live);
     live = [];
     source.sleep?.();
     upgrade(i);
     busy = false;
+    if (closeAfter) close();
   }
 
   function finish() {
@@ -158,6 +171,7 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
     opts.onToggle?.(false);
     opts.onShow?.(null);
     busy = false;
+    closeAfter = false;
   }
   // However the dialog ends up closed (even a double Escape mid-animation), tidy up.
   dlg.addEventListener('close', () => {
@@ -166,7 +180,12 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
   });
 
   async function close() {
-    if (busy || !dlg.open) return;
+    if (!dlg.open) return;
+    if (busy) {
+      closeAfter = true;
+      return;
+    }
+    closeAfter = false;
     busy = true;
     src!.wake?.();
     await frame();
@@ -174,7 +193,9 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
     const from = opts.reduce ? null : src!.rect(cur);
     live = [
       shade.animate([{ opacity: 1 }, { opacity: 0 }], { duration: from ? 560 : 220, easing: 'ease-in-out', fill: 'forwards' }),
-      text.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-in', fill: 'forwards' }),
+      ...[text, ...buttons].map((el) =>
+        el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-in', fill: 'forwards' }),
+      ),
       from
         ? img.animate([REST, flip(from, to)], { duration: 640, easing: EASE_IN_OUT, fill: 'forwards' })
         : img.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }),
@@ -222,6 +243,7 @@ export function createViewer(dishes: ViewerDish[], opts: ViewerOptions) {
     src!.sleep?.();
     upgrade(j);
     busy = false;
+    if (closeAfter) close();
   }
 
   dlg.querySelector('.lb-close')!.addEventListener('click', close);

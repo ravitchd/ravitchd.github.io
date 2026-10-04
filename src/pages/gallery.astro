@@ -438,8 +438,8 @@ const data = JSON.stringify(
   }
   .g-t.out { pointer-events: none; }
   @media (prefers-reduced-motion: reduce) { .g-t.out { display: none; } }
-  @keyframes g-c-in { from { transform: translateY(115%); } }
-  @keyframes g-c-out { to { transform: translateY(-115%); } }
+  @keyframes g-c-in { from { transform: translateY(115%); opacity: 0; } }
+  @keyframes g-c-out { to { transform: translateY(-115%); opacity: 0; } }
 
   /* Loading */
   html.g-webgl .g-loader {
