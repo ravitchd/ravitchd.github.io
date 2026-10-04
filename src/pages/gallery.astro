@@ -433,8 +433,9 @@ const data = JSON.stringify(
   .g-w { display: inline-flex; overflow: hidden; padding-bottom: 0.14em; margin-bottom: -0.14em; vertical-align: top; }
   .g-c { display: inline-block; }
   @media (prefers-reduced-motion: no-preference) {
-    .g-c { animation: g-c-in 0.75s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--k) * 14ms); }
-    .g-t.out .g-c { animation: g-c-out 0.38s cubic-bezier(.5,0,.75,0) both; animation-delay: calc(var(--k) * 7ms); }
+    /* The new name starts rising just after the old one has left, so the two never pile up. */
+    .g-c { animation: g-c-in 0.75s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(140ms + var(--k) * 14ms); }
+    .g-t.out .g-c { animation: g-c-out 0.3s cubic-bezier(.5,0,.75,0) both; animation-delay: calc(var(--k) * 5ms); }
   }
   .g-t.out { pointer-events: none; }
   @media (prefers-reduced-motion: reduce) { .g-t.out { display: none; } }

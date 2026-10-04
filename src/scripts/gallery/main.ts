@@ -140,6 +140,7 @@ export function initGallery() {
     const loaderNum = $('.g-loader-num')!;
     const focusNo = $('.g-focus-no')!;
     const focusTags = $('.g-focus-tags')!;
+    const focusMeta = $('.g-focus-meta')!;
     const focusTitle = $('.g-focus-title')!;
     const back = $('.g-back')!;
     const backSpans = [...back.querySelectorAll<HTMLElement>('span')];
@@ -244,6 +245,13 @@ export function initGallery() {
       const d = dishes[i];
       focusNo.textContent = `Nº ${d.no}`;
       focusTags.textContent = d.tags.join(' · ');
+      if (!reduce)
+        focusMeta.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], {
+          duration: 520,
+          delay: 120,
+          easing: 'cubic-bezier(.2, .8, .2, 1)',
+          fill: 'backwards',
+        });
       splitInto(focusTitle, d.title);
       setBack(d.title);
       if (glow[i]) stageEl.style.setProperty('--g-glow', glow[i]);
@@ -252,7 +260,7 @@ export function initGallery() {
     // Wait for the wall to settle on a dish, so a fast fling doesn't flicker through names.
     const onFocus = (i: number) => {
       clearTimeout(focusTimer);
-      focusTimer = window.setTimeout(() => showFocus(i), 160);
+      focusTimer = window.setTimeout(() => showFocus(i), 240);
     };
 
     /* Custom cursor */
