@@ -16,7 +16,7 @@ const { title, summary, tech, repo, demo } = project.data;
   <article class="section">
     <div class="container prose">
       <a href="/projects/">← All projects</a>
-      <h1 style="margin-top: 1rem">{title}</h1>
+      <h1 style={`margin-top: 1rem; view-transition-name: p-${project.id}`}>{title}</h1>
       <p class="muted">{summary}</p>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem">{tech.map((t) => <span class="tag">{t}</span>)}</div>
       <div style="display:flex;gap:12px;margin-bottom:2rem">

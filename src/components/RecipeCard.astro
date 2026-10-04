@@ -1,14 +1,22 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-interface Props { recipe: CollectionEntry<'recipes'> }
-const { recipe } = Astro.props;
+interface Props { recipe: CollectionEntry<'recipes'>; index?: number }
+const { recipe, index = 0 } = Astro.props;
 const { title, description, tags, prepTime, cookTime } = recipe.data;
 const time = [prepTime && `Prep ${prepTime}`, cookTime && `Cook ${cookTime}`].filter(Boolean).join(' · ');
 ---
 
-<a class="card recipe" href={`/recipes/${recipe.id}/`} data-search={`${title} ${description} ${tags.join(' ')}`.toLowerCase()} data-tags={tags.join(',')}>
-  <h3>{title}</h3>
+<a
+  class="card recipe"
+  href={`/recipes/${recipe.id}/`}
+  data-reveal
+  style={`--d:${index}`}
+  data-search={`${title} ${description} ${tags.join(' ')}`.toLowerCase()}
+  data-tags={tags.join(',')}
+>
+  <h3 style={`view-transition-name: r-${recipe.id}`}>{title}</h3>
   <p>{description}</p>
   {time && <small class="muted">{time}</small>}
   <div class="tags">{tags.map((t) => <span class="tag">{t}</span>)}</div>
+  <span class="arrow" aria-hidden="true">↗</span>
 </a>

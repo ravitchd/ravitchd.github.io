@@ -9,7 +9,7 @@ const links = [
 const path = Astro.url.pathname;
 ---
 
-<header>
+<header class="site-header">
   <div class="container bar">
     <a class="brand" href="/">{SITE.name}</a>
     <nav aria-label="Main">
@@ -31,8 +31,12 @@ const path = Astro.url.pathname;
     z-index: 10;
     background: color-mix(in srgb, var(--bg) 85%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid transparent;
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), border-color 0.3s ease, background 0.3s ease;
   }
+  header:not(.scrolled) { background: transparent; backdrop-filter: none; }
+  header.scrolled { border-bottom-color: var(--border); }
+  header.tucked { transform: translateY(-100%); }
   .bar {
     display: flex;
     align-items: center;
@@ -57,7 +61,22 @@ const path = Astro.url.pathname;
     font-size: 0.95rem;
     font-weight: 500;
   }
+  nav a { position: relative; transition: color 0.2s ease; }
+  nav a::after {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.28rem;
+    height: 1.5px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
+  }
   nav a:hover { color: var(--text); }
+  nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+  nav a[aria-current='page']::after { display: none; }
   nav a[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }
   @media (max-width: 480px) {
     .brand { font-size: 1rem; }

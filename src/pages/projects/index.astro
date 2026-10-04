@@ -13,7 +13,7 @@ const projects = (await getCollection('projects')).sort(
     <div class="container">
       <p class="eyebrow">Projects</p>
       <h1>Things I've built</h1>
-      <div class="grid" style="margin-top: 32px">{projects.map((p) => <ProjectCard project={p} />)}</div>
+      <div class="grid" style="margin-top: 32px">{projects.map((p, i) => <ProjectCard project={p} index={i} />)}</div>
     </div>
   </section>
 </Base>

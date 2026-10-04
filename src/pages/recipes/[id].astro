@@ -21,7 +21,7 @@ const facts = [
   <article class="section">
     <div class="container prose">
       <a href="/recipes/">← All recipes</a>
-      <h1 style="margin-top: 1rem">{title}</h1>
+      <h1 style={`margin-top: 1rem; view-transition-name: r-${recipe.id}`}>{title}</h1>
       <p class="muted">{description}</p>
       <div style="display:flex;flex-wrap:wrap;gap:6px">{tags.map((t) => <span class="tag">{t}</span>)}</div>
       {
@@ -36,12 +36,93 @@ const facts = [
           </dl>
         )
       }
-      <Content />
+      <div class="tools">
+        <button class="btn" id="cook" type="button" aria-pressed="false" data-magnetic>
+          <span aria-hidden="true">🍳</span> Cook mode
+        </button>
+        <small class="muted">Tap ingredients to check them off. Cook mode keeps your screen awake.</small>
+      </div>
+      <div class="recipe-body">
+        <Content />
+      </div>
     </div>
   </article>
 </Base>
 
+<script>
+  const body = document.querySelector('.recipe-body')!;
+  body.querySelectorAll('ul li').forEach((li) => {
+    li.classList.add('check');
+    li.setAttribute('role', 'checkbox');
+    li.setAttribute('aria-checked', 'false');
+    li.setAttribute('tabindex', '0');
+    const toggle = () => li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true'));
+    li.addEventListener('click', toggle);
+    li.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  });
+  const steps = [...body.querySelectorAll<HTMLLIElement>('ol li')];
+  steps.forEach((li) =>
+    li.addEventListener('click', () => steps.forEach((s) => s.classList.toggle('current', s === li))),
+  );
+
+  const btn = document.getElementById('cook')!;
+  let lock: WakeLockSentinel | null = null;
+  btn.addEventListener('click', async () => {
+    const on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', String(on));
+    document.body.classList.toggle('cooking', on);
+    try {
+      if (on && 'wakeLock' in navigator) lock = await navigator.wakeLock.request('screen');
+      else if (lock) {
+        await lock.release();
+        lock = null;
+      }
+    } catch {
+      /* wake lock not available; cook mode still enlarges the text */
+    }
+  });
+  document.addEventListener('visibilitychange', async () => {
+    if (lock && document.visibilityState === 'visible' && 'wakeLock' in navigator)
+      lock = await navigator.wakeLock.request('screen').catch(() => null);
+  });
+</script>
+
 <style>
+  .tools { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0 24px; }
+  #cook[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .recipe-body :global(li.check) {
+    list-style: none;
+    position: relative;
+    margin-left: -1.3em;
+    padding-left: 2em;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  .recipe-body :global(li.check)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    width: 1.05em;
+    height: 1.05em;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .recipe-body :global(li.check[aria-checked='true']) { color: var(--muted); text-decoration: line-through; }
+  .recipe-body :global(li.check[aria-checked='true'])::before {
+    background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/80% no-repeat;
+    border-color: var(--accent);
+  }
+  .recipe-body :global(ol li) { cursor: pointer; padding: 0.3em 0.5em; border-radius: 8px; transition: background 0.2s ease; }
+  .recipe-body :global(ol li.current) { background: var(--accent-soft); }
+  :global(body.cooking) .recipe-body { font-size: 1.2rem; }
+
   .facts { display: flex; gap: 32px; margin: 24px 0 8px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .facts dt { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
   .facts dd { margin: 0; font-weight: 600; }

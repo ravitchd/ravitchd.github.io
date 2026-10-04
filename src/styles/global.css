@@ -89,7 +89,8 @@ img { max-width: 100%; height: auto; }
   text-decoration: none;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
-.btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+.btn { transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.15s ease, background 0.15s ease; will-change: transform; }
+.btn:hover { border-color: var(--accent); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 
 .tag {
@@ -118,11 +119,14 @@ img { max-width: 100%; height: auto; }
   border-radius: var(--radius);
   color: inherit;
   text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  background:
+    radial-gradient(420px circle at var(--mx, -600px) var(--my, -600px), color-mix(in srgb, var(--accent) 13%, transparent), transparent 45%),
+    var(--surface);
+  transition: transform 0.2s cubic-bezier(.2,.8,.2,1), border-color 0.2s ease, box-shadow 0.2s ease;
+  transform-style: preserve-3d;
 }
 a.card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
   box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.35);
 }
 .card h3 { margin: 0; }
@@ -146,3 +150,119 @@ a.card:hover {
 .prose li { margin-bottom: 0.35em; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- Motion and craft ---------- */
+
+::selection { background: var(--accent); color: var(--bg); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Film grain over everything, very subtle */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Scroll progress bar, driven purely by CSS where supported */
+.progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .progress {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      z-index: 60;
+      background: var(--accent);
+      transform-origin: 0 50%;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+@keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Reveal on scroll (only hidden when JS is running) */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.8s cubic-bezier(.2,.8,.2,1), transform 0.8s cubic-bezier(.2,.8,.2,1);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.js [data-reveal].in { opacity: 1; transform: none; }
+
+/* Cursor follower */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.3s ease, width 0.25s ease, height 0.25s ease, margin 0.25s ease, background 0.25s ease;
+}
+.cursor-ring.on { opacity: 0.7; }
+.cursor-ring.hover {
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.cursor-ring.down { width: 24px; height: 24px; margin: -12px 0 0 -12px; }
+
+/* Page transitions between pages (browser-native, falls back to a normal load) */
+@view-transition { navigation: auto; }
+.site-header { view-transition-name: site-header; }
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) { animation: 220ms ease both vt-out; }
+  ::view-transition-new(root) { animation: 420ms cubic-bezier(.2,.8,.2,1) both vt-in; }
+  ::view-transition-group(*) { animation-duration: 450ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+@keyframes vt-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .card, .btn { transition: none; }
+}
+
+.skip {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 400;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--bg);
+}
+.skip:focus { top: 12px; }
+
+.card { position: relative; }
+.card .arrow {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translate(-6px, 6px);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.2,.8,.2,1);
+}
+a.card:hover .arrow, a.card:focus-visible .arrow { opacity: 1; transform: none; }

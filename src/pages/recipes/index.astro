@@ -22,7 +22,7 @@ const tags = [...new Set(recipes.flatMap((r) => r.data.tags))].sort();
         </div>
       </div>
 
-      <div class="grid" id="recipes">{recipes.map((r) => <RecipeCard recipe={r} />)}</div>
+      <div class="grid" id="recipes">{recipes.map((r, i) => <RecipeCard recipe={r} index={i} />)}</div>
       <p id="empty" class="muted" hidden>No recipes match.</p>
     </div>
   </section>

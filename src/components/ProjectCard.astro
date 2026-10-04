@@ -1,12 +1,13 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-interface Props { project: CollectionEntry<'projects'> }
-const { project } = Astro.props;
+interface Props { project: CollectionEntry<'projects'>; index?: number }
+const { project, index = 0 } = Astro.props;
 const { title, summary, tech } = project.data;
 ---
 
-<a class="card" href={`/projects/${project.id}/`}>
-  <h3>{title}</h3>
+<a class="card" href={`/projects/${project.id}/`} data-reveal style={`--d:${index}`}>
+  <h3 style={`view-transition-name: p-${project.id}`}>{title}</h3>
   <p>{summary}</p>
   <div class="tags">{tech.map((t) => <span class="tag">{t}</span>)}</div>
+  <span class="arrow" aria-hidden="true">↗</span>
 </a>

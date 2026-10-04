@@ -11,46 +11,183 @@ const projects = (await getCollection('projects'))
 const recipes = (await getCollection('recipes'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
+
+const greeting = `Hi, I'm ${SITE.name.split(' ')[0]}.`;
+let n = 0;
+const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })));
 ---
 
 <Base>
   <section class="hero">
-    <div class="container">
-      <p class="eyebrow">{SITE.role}</p>
-      <h1>Hi, I'm {SITE.name.split(' ')[0]}.</h1>
-      <p class="lede">{SITE.tagline}</p>
-      <div class="actions">
+    <canvas class="field" data-field aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="container hero-inner">
+      <p class="eyebrow intro" style="--i:0"><span class="pulse" aria-hidden="true"></span>{SITE.role}</p>
+      <h1 aria-label={greeting}>
+        {
+          words.map((w) => (
+            <span class="word" aria-hidden="true">
+              {w.map(({ ch, i }) => (
+                <span class="ch" style={`--c:${i}`}>{ch}</span>
+              ))}
+            </span>
+          ))
+        }
+      </h1>
+      <p class="lede intro" style="--i:1">
+        {SITE.rotatingPrefix} <span class="rotator" data-rotate={JSON.stringify(SITE.rotating)}>{SITE.rotating[0]}</span>
+      </p>
+      <p class="sub intro" style="--i:2">{SITE.tagline}</p>
+      <div class="actions intro" style="--i:3">
         <a class="btn primary" href="/resume/">View resume</a>
         <a class="btn" href="/projects/">See projects</a>
         {SITE.github && <a class="btn" href={SITE.github}>GitHub</a>}
       </div>
     </div>
+    <a class="scroll-cue" href="#work" aria-label="Scroll to projects"><span></span></a>
   </section>
 
-  <section class="section">
+  <section class="section" id="work">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2>Selected projects</h2>
         <a href="/projects/">All projects →</a>
       </div>
-      <div class="grid">{projects.map((p) => <ProjectCard project={p} />)}</div>
+      <div class="grid">{projects.map((p, i) => <ProjectCard project={p} index={i} />)}</div>
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <h2>From the kitchen</h2>
         <a href="/recipes/">All recipes →</a>
       </div>
-      <div class="grid">{recipes.map((r) => <RecipeCard recipe={r} />)}</div>
+      <div class="grid">{recipes.map((r, i) => <RecipeCard recipe={r} index={i} />)}</div>
     </div>
   </section>
 </Base>
 
 <style>
-  .hero { padding: clamp(64px, 12vw, 128px) 0 40px; }
-  .hero h1 { max-width: 14ch; }
-  .lede { font-size: clamp(1.1rem, 2.2vw, 1.3rem); color: var(--muted); max-width: 40ch; }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .hero {
+    position: relative;
+    min-height: min(92vh, 860px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    margin-top: -64px;
+    padding: 120px 0 80px;
+    isolation: isolate;
+  }
+  .field {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 65% 45%, #000 30%, transparent 80%);
+    mask-image: radial-gradient(ellipse 75% 70% at 65% 45%, #000 30%, transparent 80%);
+  }
+  .aurora {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    opacity: 0.7;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+  .aurora span {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--blob), transparent);
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .aurora span:nth-child(1) { width: 640px; height: 640px; left: 50%; top: 0%; --blob: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .aurora span:nth-child(2) { width: 520px; height: 520px; left: 68%; top: 40%; --blob: color-mix(in srgb, #d9a441 26%, transparent); animation-delay: -6s; animation-duration: 22s; }
+  .aurora span:nth-child(3) { width: 460px; height: 460px; left: 32%; top: 45%; --blob: color-mix(in srgb, #7aa6c2 22%, transparent); animation-delay: -12s; animation-duration: 26s; }
+  @keyframes drift {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-60px, 40px) scale(1.12); }
+    100% { transform: translate(40px, -30px) scale(0.95); }
+  }
+
+  .hero h1 { font-size: clamp(2.8rem, 8vw, 5.6rem); margin-bottom: 0.3em; max-width: none; }
+  .word { display: inline-block; white-space: nowrap; margin-right: 0.22em; }
+  .ch { display: inline-block; }
+  .lede { font-family: var(--serif); font-size: clamp(1.4rem, 3.4vw, 2.1rem); line-height: 1.25; margin-bottom: 0.6em; }
+  .rotator {
+    display: inline-block;
+    color: var(--accent);
+    font-style: italic;
+    transition: opacity 0.38s ease, transform 0.38s cubic-bezier(.2,.8,.2,1), filter 0.38s ease;
+  }
+  .rotator:global(.out) { opacity: 0; transform: translateY(-0.4em); filter: blur(6px); }
+  .rotator:global(.in) { opacity: 0; transform: translateY(0.4em); filter: blur(6px); transition: none; }
+  .sub { color: var(--muted); max-width: 44ch; font-size: 1.05rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+
+  .pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    vertical-align: 1px;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse { 70%, 100% { box-shadow: 0 0 0 10px transparent; } }
+
+  .scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    width: 24px;
+    height: 38px;
+    margin-left: -12px;
+    border: 1.5px solid var(--muted);
+    border-radius: 14px;
+    opacity: 0.6;
+  }
+  .scroll-cue span {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 3px;
+    height: 7px;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    background: var(--muted);
+    animation: cue 1.8s ease-in-out infinite;
+  }
+  @keyframes cue { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ch {
+      opacity: 0;
+      transform: translateY(0.5em) rotate(6deg);
+      filter: blur(8px);
+      animation: rise 0.9s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: calc(250ms + var(--c) * 38ms);
+    }
+    .intro {
+      opacity: 0;
+      animation: fade-up 0.9s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: calc(700ms + var(--i) * 120ms);
+    }
+    .intro.eyebrow { animation-delay: 100ms; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aurora span, .pulse, .scroll-cue span { animation: none; }
+  }
+  @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 640px) {
+    .hero { min-height: 88vh; padding-top: 110px; }
+    .scroll-cue { display: none; }
+    .aurora span:nth-child(1) { left: 20%; }
+  }
 </style>
