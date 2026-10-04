@@ -1,0 +1,23 @@
+---
+import { SITE } from '../site';
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <div class="container row">
+    <span class="muted">© {year} {SITE.name}</span>
+    <div class="links">
+      {SITE.github && <a href={SITE.github}>GitHub</a>}
+      {SITE.linkedin && <a href={SITE.linkedin}>LinkedIn</a>}
+      {SITE.email && <a href={`mailto:${SITE.email}`}>Email</a>}
+    </div>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 28px 0; font-size: 0.9rem; }
+  .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .links { display: flex; gap: 18px; }
+  .links a { color: var(--muted); text-decoration: none; }
+  .links a:hover { color: var(--accent); }
+</style>

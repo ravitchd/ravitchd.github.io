@@ -1,0 +1,84 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import RecipeCard from '../../components/RecipeCard.astro';
+
+const recipes = (await getCollection('recipes')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const tags = [...new Set(recipes.flatMap((r) => r.data.tags))].sort();
+---
+
+<Base title="Recipes" description="Recipes I cook and love.">
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">Recipes</p>
+      <h1>From the kitchen</h1>
+      <p class="muted">Dishes I make on repeat.</p>
+
+      <div class="filters">
+        <input id="q" type="search" placeholder="Search recipes…" aria-label="Search recipes" />
+        <div class="chips">
+          <button class="chip active" data-tag="">All</button>
+          {tags.map((t) => <button class="chip" data-tag={t}>{t}</button>)}
+        </div>
+      </div>
+
+      <div class="grid" id="recipes">{recipes.map((r) => <RecipeCard recipe={r} />)}</div>
+      <p id="empty" class="muted" hidden>No recipes match.</p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const q = document.getElementById('q') as HTMLInputElement;
+  const cards = [...document.querySelectorAll<HTMLElement>('#recipes .recipe')];
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+  const empty = document.getElementById('empty')!;
+  let tag = '';
+
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let shown = 0;
+    for (const c of cards) {
+      const ok = (!term || c.dataset.search!.includes(term)) && (!tag || c.dataset.tags!.split(',').includes(tag));
+      c.hidden = !ok;
+      if (ok) shown++;
+    }
+    empty.hidden = shown > 0;
+  }
+
+  q.addEventListener('input', apply);
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      tag = chip.dataset.tag!;
+      chips.forEach((c) => c.classList.toggle('active', c === chip));
+      apply();
+    });
+  }
+</script>
+
+<style>
+  .filters { display: flex; flex-direction: column; gap: 14px; margin: 28px 0; }
+  #q {
+    width: 100%;
+    max-width: 420px;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .recipe[hidden] { display: none; }
+</style>

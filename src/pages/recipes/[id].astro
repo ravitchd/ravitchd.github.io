@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const recipes = await getCollection('recipes');
+  return recipes.map((recipe) => ({ params: { id: recipe.id }, props: { recipe } }));
+}
+
+const { recipe } = Astro.props;
+const { Content } = await render(recipe);
+const { title, description, tags, prepTime, cookTime, servings } = recipe.data;
+const facts = [
+  prepTime && ['Prep', prepTime],
+  cookTime && ['Cook', cookTime],
+  servings && ['Serves', String(servings)],
+].filter(Boolean) as [string, string][];
+---
+
+<Base title={title} description={description}>
+  <article class="section">
+    <div class="container prose">
+      <a href="/recipes/">← All recipes</a>
+      <h1 style="margin-top: 1rem">{title}</h1>
+      <p class="muted">{description}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">{tags.map((t) => <span class="tag">{t}</span>)}</div>
+      {
+        facts.length > 0 && (
+          <dl class="facts">
+            {facts.map(([k, v]) => (
+              <div>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .facts { display: flex; gap: 32px; margin: 24px 0 8px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .facts dt { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .facts dd { margin: 0; font-weight: 600; }
+</style>

@@ -1,0 +1,66 @@
+---
+import { SITE } from '../site';
+
+const links = [
+  { href: '/resume/', label: 'Resume' },
+  { href: '/projects/', label: 'Projects' },
+  { href: '/recipes/', label: 'Recipes' },
+];
+const path = Astro.url.pathname;
+---
+
+<header>
+  <div class="container bar">
+    <a class="brand" href="/">{SITE.name}</a>
+    <nav aria-label="Main">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
+
+<style>
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 64px;
+  }
+  .brand {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  nav { display: flex; gap: 4px; }
+  nav a {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  nav a:hover { color: var(--text); }
+  nav a[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }
+  @media (max-width: 480px) {
+    .brand { font-size: 1rem; }
+    nav a { padding: 0.35rem 0.5rem; font-size: 0.88rem; }
+  }
+</style>
