@@ -23,6 +23,7 @@ const dishes = await Promise.all(
     };
   }),
 );
+const pizzaNights = dishes.filter((d) => d.tags.includes('pizza')).length;
 ---
 
 <Base title="Gallery" description="Dishes Dylan has cooked at home: Neapolitan pizza, crunchwraps, crispy chicken and more.">
@@ -31,9 +32,14 @@ const dishes = await Promise.all(
       <div class="cover-title">
         <p class="eyebrow rise" style="--i:0">Gallery</p>
         <h1 class="rise" style="--i:1">Cooked<br /><em>at home.</em></h1>
+        <dl class="stats rise" style="--i:2">
+          <div><dt>Dishes</dt><dd data-count={dishes.length}>{dishes.length}</dd></div>
+          <div><dt>Pizza nights</dt><dd data-count={pizzaNights}>{pizzaNights}</dd></div>
+          <div><dt>Heart-shaped</dt><dd data-count="1">1</dd></div>
+        </dl>
       </div>
 
-      <nav class="contents rise" style="--i:2" aria-label="Dishes">
+      <nav class="contents rise" style="--i:3" aria-label="Dishes">
         <p class="contents-head"><span>Contents</span><span>{pad(dishes.length)}</span></p>
         <ol>
           {
@@ -132,6 +138,21 @@ const dishes = await Promise.all(
     }
     return start.call(document, fn).finished.catch(() => {});
   };
+
+  /* ---------- Count-up stats ---------- */
+  if (!reduce) {
+    document.querySelectorAll<HTMLElement>('[data-count]').forEach((el, k) => {
+      const end = Number(el.dataset.count);
+      const t0 = performance.now() + 500 + k * 120;
+      el.textContent = '0';
+      const step = (t: number) => {
+        const p = Math.min(Math.max((t - t0) / 900, 0), 1);
+        el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
 
   /* ---------- Contents: a small photo follows the cursor over each row ---------- */
   const peek = document.querySelector<HTMLImageElement>('.peek')!;
@@ -269,6 +290,16 @@ const dishes = await Promise.all(
     margin: 0;
   }
   .cover h1 em { color: var(--accent); font-weight: 500; }
+  .stats { display: flex; gap: 16px 36px; margin: 36px 0 0; flex-wrap: wrap; }
+  .stats div { display: flex; flex-direction: column-reverse; }
+  .stats dt { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .stats dd {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
 
   .contents { border-top: 1.5px solid var(--text); }
   .contents-head {
@@ -477,5 +508,7 @@ const dishes = await Promise.all(
   }
   @media (max-width: 480px) {
     .c-tag { display: none; }
+    .stats { column-gap: 22px; margin-top: 28px; }
+    .stats dt { font-size: 0.66rem; letter-spacing: 0.1em; }
   }
 </style>
