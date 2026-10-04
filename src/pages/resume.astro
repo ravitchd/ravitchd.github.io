@@ -1,13 +1,70 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { SITE } from '../site';
+import { experience, education, skills } from '../data/resume';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
-<Base title="Resume" description="Resume and experience.">
+<Base title="Resume" description={`Resume of ${SITE.name}, ${SITE.role}.`}>
   <section class="section">
     <div class="container prose">
       <p class="eyebrow">Resume</p>
-      <h1>Experience</h1>
-      <p class="muted">Resume content is coming soon. A downloadable PDF will live here too.</p>
+      <h1>{SITE.name}</h1>
+      <p class="muted">{SITE.role} · {SITE.location}</p>
+      <div class="actions">
+        <a class="btn primary" href={SITE.resumePdf} download>Download PDF</a>
+        {SITE.email && <a class="btn" href={`mailto:${SITE.email}`}>{SITE.email}</a>}
+      </div>
+
+      <h2>Experience</h2>
+      {experience.map((job) => (
+        <div class="entry">
+          <div class="entry-head">
+            <h3>{job.role}</h3>
+            <span class="muted">{job.dates}</span>
+          </div>
+          <p class="muted where">{job.org} · {job.location}</p>
+          <ul>{job.points.map((pt) => <li>{pt}</li>)}</ul>
+        </div>
+      ))}
+
+      <h2>Projects</h2>
+      {projects.map((p) => (
+        <div class="entry">
+          <h3><a href={`/projects/${p.id}/`}>{p.data.title}</a></h3>
+          <p class="muted">{p.data.summary}</p>
+        </div>
+      ))}
+
+      <h2>Education</h2>
+      {education.map((ed) => (
+        <div class="entry">
+          <div class="entry-head">
+            <h3>{ed.degree}</h3>
+            <span class="muted">{ed.dates}</span>
+          </div>
+          <p class="muted where">{ed.school} · {ed.location}</p>
+          {ed.detail && <p class="detail">Coursework: {ed.detail}</p>}
+        </div>
+      ))}
+
+      <h2>Skills</h2>
+      <div class="skills">{skills.map((s) => <span class="tag">{s}</span>)}</div>
     </div>
   </section>
 </Base>
+
+<style>
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 8px; }
+  .entry { margin-bottom: 1.6rem; }
+  .entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 16px; flex-wrap: wrap; }
+  .entry-head h3 { margin: 0; }
+  .entry-head span { font-size: 0.9rem; white-space: nowrap; }
+  .where { margin: 0.15rem 0 0.5rem; font-size: 0.95rem; }
+  .detail { font-size: 0.95rem; }
+  .skills { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
