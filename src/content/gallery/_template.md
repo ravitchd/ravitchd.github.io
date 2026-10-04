@@ -7,7 +7,7 @@ title: Name of the dish
 caption: One sentence about it.
 image: ./images/my-dish.jpg
 alt: What the photo shows, for screen readers.
-tags: [pizza]          # used for the filter buttons
+tags: [pizza]          # shown with the dish; 'pizza' also counts towards Pizza nights
 order: 10              # lower numbers show first (optional)
 # recipe: my-recipe    # optional: id of a recipe in src/content/recipes to link to
 ---
