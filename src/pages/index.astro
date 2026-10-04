@@ -3,7 +3,9 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import RecipeCard from '../components/RecipeCard.astro';
+import { Picture } from 'astro:assets';
 import { SITE } from '../site';
+import aboutPhoto from '../assets/dylan-and-girlfriend.jpg';
 
 const projects = (await getCollection('projects'))
   .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.valueOf() - a.data.date.valueOf())
@@ -45,6 +47,33 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
       </div>
     </div>
     <a class="scroll-cue" href="#work" aria-label="Scroll to projects"><span></span></a>
+  </section>
+
+  <section class="section about" id="about">
+    <div class="container about-grid">
+      <figure class="about-photo" data-reveal>
+        <Picture
+          src={aboutPhoto}
+          widths={[600, 900, 1300]}
+          sizes="(max-width: 820px) 100vw, 560px"
+          formats={['avif', 'webp']}
+          alt="Me and my girlfriend smiling at a table at a wedding reception"
+        />
+        <figcaption>With my girlfriend at a wedding</figcaption>
+      </figure>
+      <div class="about-copy" data-reveal style="--d:1">
+        <p class="eyebrow">About me</p>
+        <h2>Nice to meet you.</h2>
+        <p>
+          I'm a mechanical engineer at SSOE in Hillsboro, Oregon, designing fluid delivery systems for semiconductor fabs: high-pressure
+          and hazardous gas routing, pipe classes and materials, and plenty of constructability reviews.
+        </p>
+        <p>
+          I studied mechanical engineering at Washington State University Vancouver. Outside of work I'm usually in the kitchen, mostly
+          making pizza. You can see what I've been cooking in the <a href="/gallery/">gallery</a>.
+        </p>
+      </div>
+    </div>
   </section>
 
   <section class="section" id="work">
@@ -184,6 +213,21 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
   }
   @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
   @keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  .about-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .about-photo { margin: 0; }
+  .about-photo :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    box-shadow: 0 30px 60px -36px rgba(0, 0, 0, 0.55);
+  }
+  .about-photo figcaption { margin-top: 12px; font-size: 0.85rem; color: var(--muted); font-style: italic; font-family: var(--serif); }
+  .about-copy p:not(.eyebrow) { color: var(--muted); font-size: 1.05rem; }
+  @media (max-width: 820px) {
+    .about-grid { grid-template-columns: 1fr; gap: 28px; }
+  }
 
   @media (max-width: 640px) {
     .hero { min-height: 88vh; padding-top: 110px; }

@@ -2,93 +2,66 @@
 import { getCollection } from 'astro:content';
 import { Picture, getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import portrait from '../assets/dylan-portrait.jpg';
 
 // Each dish is a Markdown file in src/content/gallery (see _template.md there).
 const entries = (await getCollection('gallery')).sort(
   (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
 );
 
+const pad = (n: number) => String(n).padStart(2, '0');
 const dishes = await Promise.all(
   entries.map(async (e, i) => {
     const large = await getImage({ src: e.data.image, width: 1600, format: 'webp', quality: 82 });
-    return { ...e.data, id: e.id, large: large.src, recipeHref: e.data.recipe && `/recipes/${e.data.recipe.id}/` };
+    const thumb = await getImage({ src: e.data.image, width: 360, format: 'webp', quality: 72 });
+    return {
+      ...e.data,
+      id: e.id,
+      no: pad(i + 1),
+      large: large.src,
+      thumb: thumb.src,
+      recipeHref: e.data.recipe && `/recipes/${e.data.recipe.id}/`,
+    };
   }),
 );
-
-const tagCounts = new Map<string, number>();
-for (const d of dishes) for (const t of d.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
-const tags = [...tagCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-const pizzaNights = tagCounts.get('pizza') ?? 0;
-const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
 ---
 
-<Base title="Food gallery" description="A gallery of dishes Dylan has cooked: pizza, crunchwraps, crispy chicken and more.">
-  <section class="g-hero">
-    <div class="glow" aria-hidden="true"></div>
-    <div class="container g-hero-inner">
-      <div class="g-copy">
-        <p class="eyebrow rise" style="--i:0">Kitchen gallery</p>
-        <h1 class="rise" style="--i:1">
-          Things I've <em class="scribble">cooked<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14 C 40 4, 80 4, 118 11 S 178 17, 197 6" /></svg></em>
-        </h1>
-        <p class="g-sub rise" style="--i:2">
-          Mostly pizza, if we're being honest. Everything here came out of my own kitchen, usually after too much time spent
-          tweaking the dough.
-        </p>
-        <dl class="stats rise" style="--i:3">
-          <div><dt>Dishes</dt><dd data-count={dishes.length}>{dishes.length}</dd></div>
-          <div><dt>Pizza nights</dt><dd data-count={pizzaNights}>{pizzaNights}</dd></div>
-          <div><dt>Heart-shaped</dt><dd data-count="1">1</dd></div>
-        </dl>
+<Base title="Gallery" description="Dishes Dylan has cooked at home: Neapolitan pizza, crunchwraps, crispy chicken and more.">
+  <header class="cover">
+    <div class="container cover-grid">
+      <div class="cover-title">
+        <p class="eyebrow rise" style="--i:0">Gallery</p>
+        <h1 class="rise" style="--i:1">Cooked<br /><em>at home.</em></h1>
       </div>
 
-      <div class="chef rise" style="--i:2">
-        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
-          <defs><path id="ring-path" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0" /></defs>
-          <text><textPath href="#ring-path" textLength="538" lengthAdjust="spacing">{ring}</textPath></text>
-        </svg>
-        <div class="chef-photo">
-          <Picture src={portrait} widths={[240, 440]} sizes="220px" formats={['avif', 'webp']} alt="Dylan, smiling, in a white shirt and black tie" loading="eager" />
-        </div>
-      </div>
+      <nav class="contents rise" style="--i:2" aria-label="Dishes">
+        <p class="contents-head"><span>Contents</span><span>{pad(dishes.length)}</span></p>
+        <ol>
+          {
+            dishes.map((d) => (
+              <li>
+                <a href={`#${d.id}`} data-thumb={d.thumb}>
+                  <span class="c-no">{d.no}</span>
+                  <span class="c-title">{d.title}</span>
+                  <span class="c-dots" aria-hidden="true" />
+                  <span class="c-tag">{d.tags[0]}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
     </div>
-  </section>
+    <img class="peek" alt="" aria-hidden="true" />
+  </header>
 
-  <div class="ribbon" aria-hidden="true">
-    <div class="marquee">
-      <div class="track">
-        {[0, 1].map(() => (
-          <span>
-            {dishes.map((d) => (
-              <>
-                {d.title}
-                <i>✺</i>
-              </>
-            ))}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
-
-  <section class="section">
-    <div class="container">
-      <div class="g-filters" role="group" aria-label="Filter dishes" data-reveal>
-        <button class="pill active" data-tag="" aria-pressed="true">All <sup>{dishes.length}</sup></button>
-        {tags.map(([t, c]) => (
-          <button class="pill" data-tag={t} aria-pressed="false">
-            {t} <sup>{c}</sup>
-          </button>
-        ))}
-      </div>
-
-      <ul class="masonry" id="dishes">
-        {
-          dishes.map((d, i) => (
-            <li class="cell" data-tags={d.tags.join(',')} data-reveal style={`--d:${i % 3}; view-transition-name: dish-${d.id}`}>
+  <div class="dishes">
+    {
+      dishes.map((d, i) => (
+        <article class:list={['dish', { flip: i % 2 === 1 }]} id={d.id}>
+          <div class="container dish-grid">
+            <div class="frame" data-reveal>
               <button
-                class="tile"
+                class="plate"
                 type="button"
                 data-index={i}
                 data-title={d.title}
@@ -96,29 +69,38 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
                 data-tags={d.tags.join(',')}
                 data-large={d.large}
                 data-alt={d.alt}
+                data-no={d.no}
                 data-recipe={d.recipeHref || undefined}
-                aria-label={`Open photo: ${d.title}`}
+                aria-label={`View larger: ${d.title}`}
               >
                 <Picture
                   src={d.image}
-                  widths={[420, 700, 1000]}
-                  sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 340px"
+                  widths={[600, 900, 1300]}
+                  sizes="(max-width: 820px) 100vw, 620px"
                   formats={['avif', 'webp']}
                   alt={d.alt}
-                  loading={i < 3 ? 'eager' : 'lazy'}
+                  loading={i < 1 ? 'eager' : 'lazy'}
                 />
-                <span class="shine" aria-hidden="true" />
-                <span class="meta">
-                  <span class="t">{d.title}</span>
-                  <span class="c">{d.caption}</span>
-                </span>
               </button>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
+            </div>
+            <div class="text" data-reveal style="--d:1">
+              <p class="no">
+                <span>Nº {d.no}</span>
+                <span class="kinds">{d.tags.join(' · ')}</span>
+              </p>
+              <h2>{d.title}</h2>
+              <p class="caption">{d.caption}</p>
+              {d.recipeHref && (
+                <a class="recipe" href={d.recipeHref}>
+                  Read the recipe <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </article>
+      ))
+    }
+  </div>
 
   <dialog class="lightbox" aria-label="Dish photo">
     <div class="lb-inner">
@@ -128,8 +110,7 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
           <span class="lb-count"></span>
           <h2 class="lb-title"></h2>
           <p class="lb-caption"></p>
-          <div class="lb-tags"></div>
-          <a class="btn primary lb-recipe" hidden>Get the recipe →</a>
+          <a class="btn primary lb-recipe" hidden>Read the recipe →</a>
         </figcaption>
       </figure>
       <button class="lb-btn lb-prev" type="button" aria-label="Previous dish">←</button>
@@ -152,90 +133,59 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
     return start.call(document, fn).finished.catch(() => {});
   };
 
-  /* ---------- Count-up stats ---------- */
-  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
-  if (!reduce) {
-    counters.forEach((el, k) => {
-      const end = Number(el.dataset.count);
-      const t0 = performance.now() + 500 + k * 120;
-      el.textContent = '0';
-      const step = (t: number) => {
-        const p = Math.min(Math.max((t - t0) / 900, 0), 1);
-        el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
-        if (p < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    });
-  }
-
-  /* ---------- Filters (animated with view transitions where supported) ---------- */
-  const pills = [...document.querySelectorAll<HTMLButtonElement>('.g-filters .pill')];
-  const cells = [...document.querySelectorAll<HTMLLIElement>('#dishes .cell')];
-  for (const pill of pills) {
-    pill.addEventListener('click', () => {
-      const tag = pill.dataset.tag!;
-      vt(() => {
-        pills.forEach((p) => {
-          p.classList.toggle('active', p === pill);
-          p.setAttribute('aria-pressed', String(p === pill));
-        });
-        for (const c of cells) {
-          c.hidden = !!tag && !c.dataset.tags!.split(',').includes(tag);
-          c.classList.add('in');
-        }
-      });
-    });
-  }
-
-  /* ---------- Tile tilt + glare ---------- */
-  const tiles = [...document.querySelectorAll<HTMLButtonElement>('.tile')];
+  /* ---------- Contents: a small photo follows the cursor over each row ---------- */
+  const peek = document.querySelector<HTMLImageElement>('.peek')!;
   if (fine && !reduce) {
-    for (const tile of tiles) {
-      tile.addEventListener('pointermove', (e) => {
-        const r = tile.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
-        tile.style.setProperty('--gx', `${px * 100}%`);
-        tile.style.setProperty('--gy', `${py * 100}%`);
-        tile.style.transform = `perspective(1000px) rotateX(${(py - 0.5) * -7}deg) rotateY(${(px - 0.5) * 7}deg)`;
+    let x = 0, y = 0, px = 0, py = 0, raf = 0;
+    const tick = () => {
+      px += (x - px) * 0.18;
+      py += (y - py) * 0.18;
+      peek.style.transform = `translate3d(${px}px, ${py}px, 0) rotate(${(x - px) * 0.08}deg)`;
+      raf = requestAnimationFrame(tick);
+    };
+    document.querySelectorAll<HTMLAnchorElement>('.contents a').forEach((a) => {
+      a.addEventListener('pointerenter', (e) => {
+        peek.src = a.dataset.thumb!;
+        if (!peek.classList.contains('on')) ((px = x = e.clientX + 24), (py = y = e.clientY - 80));
+        peek.classList.add('on');
+        if (!raf) tick();
       });
-      tile.addEventListener('pointerleave', () => (tile.style.transform = ''));
-    }
+      a.addEventListener('pointermove', (e) => ((x = e.clientX + 24), (y = e.clientY - 80)));
+      a.addEventListener('pointerleave', () => peek.classList.remove('on'));
+    });
+    document.querySelector('.contents')!.addEventListener('pointerleave', () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    });
   }
 
   /* ---------- Lightbox ---------- */
+  const plates = [...document.querySelectorAll<HTMLButtonElement>('.plate')];
   const dlg = document.querySelector<HTMLDialogElement>('.lightbox')!;
   const img = dlg.querySelector<HTMLImageElement>('.lb-img')!;
   const title = dlg.querySelector<HTMLElement>('.lb-title')!;
   const caption = dlg.querySelector<HTMLElement>('.lb-caption')!;
-  const tagBox = dlg.querySelector<HTMLElement>('.lb-tags')!;
   const count = dlg.querySelector<HTMLElement>('.lb-count')!;
   const recipe = dlg.querySelector<HTMLAnchorElement>('.lb-recipe')!;
   let current = -1;
+  const thumbOf = (p: HTMLElement) => p.querySelector('img')!;
 
-  const visible = () => tiles.filter((t) => !(t.parentElement as HTMLElement).hidden);
-  const thumb = (t: HTMLElement) => t.querySelector('img')!;
-
-  function fill(tile: HTMLButtonElement) {
-    const list = visible();
-    const d = tile.dataset;
-    current = Number(d.index);
+  function fill(i: number) {
+    const d = plates[i].dataset;
+    current = i;
     img.src = d.large!;
     img.alt = d.alt!;
     title.textContent = d.title!;
     caption.textContent = d.caption!;
-    count.textContent = `${String(list.indexOf(tile) + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
-    tagBox.replaceChildren(
-      ...d.tags!.split(',').filter(Boolean).map((t) => Object.assign(document.createElement('span'), { className: 'tag', textContent: t })),
-    );
+    count.textContent = `Nº ${d.no} / ${String(plates.length).padStart(2, '0')}`;
     recipe.hidden = !d.recipe;
     if (d.recipe) recipe.href = d.recipe;
   }
 
-  async function open(tile: HTMLButtonElement) {
-    const th = thumb(tile);
+  async function open(i: number) {
+    const th = thumbOf(plates[i]);
     th.style.viewTransitionName = 'dish-photo';
-    fill(tile);
+    fill(i);
     await img.decode().catch(() => {});
     await vt(() => {
       th.style.viewTransitionName = '';
@@ -247,33 +197,34 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
   }
 
   async function close() {
-    const tile = tiles[current];
-    img.style.viewTransitionName = 'dish-photo';
+    const plate = plates[current];
+    // Morph back only if the dish is on screen; otherwise just fade out.
+    const r = plate?.getBoundingClientRect();
+    const onScreen = r && r.bottom > 0 && r.top < innerHeight;
+    if (onScreen) img.style.viewTransitionName = 'dish-photo';
     await vt(() => {
       img.style.viewTransitionName = '';
-      if (tile) thumb(tile).style.viewTransitionName = 'dish-photo';
+      if (onScreen) thumbOf(plate).style.viewTransitionName = 'dish-photo';
       dlg.close();
       document.documentElement.classList.remove('lb-open');
     });
-    if (tile) {
-      thumb(tile).style.viewTransitionName = '';
-      tile.focus({ preventScroll: true });
+    if (plate) {
+      thumbOf(plate).style.viewTransitionName = '';
+      plate.focus({ preventScroll: true });
     }
   }
 
   async function go(dir: 1 | -1) {
-    const list = visible();
-    const i = list.indexOf(tiles[current]);
-    const next = list[(i + dir + list.length) % list.length];
-    if (!next || next === tiles[current]) return;
+    const next = (current + dir + plates.length) % plates.length;
     const pre = new Image();
-    pre.src = next.dataset.large!;
+    pre.src = plates[next].dataset.large!;
     await pre.decode().catch(() => {});
-    dlg.dataset.dir = dir > 0 ? 'next' : 'prev';
     vt(() => fill(next));
+    // Keep the page underneath in step, so closing lands on the dish you were viewing.
+    plates[next].closest('.dish')!.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
   }
 
-  tiles.forEach((t) => t.addEventListener('click', () => open(t)));
+  plates.forEach((p, i) => p.addEventListener('click', () => open(i)));
   dlg.querySelector('.lb-close')!.addEventListener('click', close);
   dlg.querySelector('.lb-prev')!.addEventListener('click', () => go(-1));
   dlg.querySelector('.lb-next')!.addEventListener('click', () => go(1));
@@ -289,7 +240,6 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
     if (e.key === 'ArrowLeft') go(-1);
   });
 
-  // Swipe between dishes on touch screens
   let sx = 0, sy = 0;
   dlg.addEventListener('touchstart', (e) => ((sx = e.touches[0].clientX), (sy = e.touches[0].clientY)), { passive: true });
   dlg.addEventListener(
@@ -304,192 +254,143 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
 </script>
 
 <style>
-  /* ---------- Hero ---------- */
-  .g-hero {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    margin-top: -64px;
-    padding: 136px 0 56px;
-  }
-  .glow {
-    position: absolute;
-    inset: -20% -10% auto auto;
-    width: 760px;
-    height: 760px;
-    z-index: -1;
-    border-radius: 50%;
-    background:
-      radial-gradient(closest-side at 40% 40%, color-mix(in srgb, #e0763a 26%, transparent), transparent),
-      radial-gradient(closest-side at 65% 60%, color-mix(in srgb, var(--accent) 24%, transparent), transparent);
-    filter: blur(10px);
-    animation: glow 16s ease-in-out infinite alternate;
-  }
-  @keyframes glow { to { transform: translate(-60px, 50px) rotate(25deg) scale(1.1); } }
-
-  .g-hero-inner {
+  /* ---------- Cover ---------- */
+  .cover { padding: 72px 0 40px; }
+  .cover-grid {
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 48px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 64px;
+    align-items: end;
   }
-  .g-hero h1 { font-size: clamp(2.6rem, 7.4vw, 5rem); margin-bottom: 0.35em; }
-  .scribble { position: relative; font-style: italic; color: var(--accent); white-space: nowrap; }
-  .scribble svg {
-    position: absolute;
-    left: -2%;
-    bottom: -0.12em;
-    width: 104%;
-    height: 0.32em;
-    overflow: visible;
-  }
-  .scribble path {
-    fill: none;
-    stroke: #e0763a;
-    stroke-width: 5;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 260;
-    stroke-dashoffset: 0;
-  }
-  .g-sub { color: var(--muted); max-width: 46ch; font-size: 1.08rem; }
-
-  .stats { display: flex; gap: 36px; margin: 28px 0 0; flex-wrap: wrap; }
-  .stats div { display: flex; flex-direction: column-reverse; }
-  .stats dt { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .stats dd {
+  .cover h1 {
+    font-size: clamp(3.2rem, 9vw, 6.6rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
     margin: 0;
-    font-family: var(--serif);
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
   }
+  .cover h1 em { color: var(--accent); font-weight: 500; }
 
-  /* Portrait with rotating text ring */
-  .chef { position: relative; width: 280px; height: 280px; display: grid; place-items: center; }
-  .ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 26s linear infinite; }
-  .ring text {
-    font-family: var(--sans);
-    font-size: 11.5px;
+  .contents { border-top: 1.5px solid var(--text); }
+  .contents-head {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 10px 0;
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    fill: var(--muted);
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .chef-photo {
-    width: 196px;
-    height: 196px;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 0 0 6px var(--bg), 0 0 0 7px var(--border), 0 24px 50px -24px rgba(0, 0, 0, 0.5);
-  }
-  .chef-photo :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
-
-  /* ---------- Marquee ribbon ---------- */
-  .ribbon { overflow: hidden; padding: 24px 0; margin-top: -16px; }
-  .marquee {
-    overflow: hidden;
-    background: var(--accent);
-    color: var(--bg);
-    transform: rotate(-1.6deg);
-    margin: 8px -20px 0;
-    padding: 14px 0;
-    box-shadow: 0 16px 40px -28px rgba(0, 0, 0, 0.6);
-  }
-  .track { display: flex; width: max-content; animation: marquee 48s linear infinite; }
-  .track span { font-family: var(--serif); font-size: clamp(1.1rem, 2.4vw, 1.5rem); font-style: italic; white-space: nowrap; padding-right: 0.9em; }
-  .track i { font-style: normal; margin: 0 0.9em; opacity: 0.65; }
-  @keyframes marquee { to { transform: translateX(-50%); } }
-
-  /* ---------- Filters ---------- */
-  .g-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
-  .pill {
-    padding: 0.45rem 1rem;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
     color: var(--muted);
-    font: inherit;
-    font-size: 0.92rem;
-    font-weight: 500;
-    text-transform: capitalize;
-    cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease, background 0.25s ease, transform 0.2s ease;
+    border-bottom: 1px solid var(--border);
   }
-  .pill:hover { color: var(--text); border-color: var(--accent); }
-  .pill:active { transform: scale(0.96); }
-  .pill.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  .pill sup { font-size: 0.7em; opacity: 0.7; margin-left: 2px; }
+  .contents ol { list-style: none; margin: 0; padding: 0; }
+  .contents a {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .c-no { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 0.9rem; min-width: 1.6em; }
+  .c-title { font-family: var(--serif); font-size: 1.12rem; transition: transform 0.35s cubic-bezier(.2,.8,.2,1), color 0.2s ease; }
+  .c-dots { flex: 1; min-width: 16px; border-bottom: 1px dotted color-mix(in srgb, var(--muted) 60%, transparent); transform: translateY(-4px); }
+  .c-tag { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .contents a:hover .c-title, .contents a:focus-visible .c-title { transform: translateX(8px); color: var(--accent); }
 
-  /* ---------- Masonry ---------- */
-  .masonry { list-style: none; margin: 0; padding: 0; columns: 3 300px; column-gap: 20px; }
-  .cell { break-inside: avoid; margin-bottom: 20px; }
-  .cell[hidden] { display: none; }
-  .tile {
-    position: relative;
+  .peek {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    width: 150px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 24px 40px -18px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.85;
+    transition: opacity 0.25s ease, scale 0.35s cubic-bezier(.2,.8,.2,1);
+  }
+  .peek:not([src]) { display: none; }
+  .peek.on { opacity: 1; scale: 1; }
+
+  /* ---------- Dishes ---------- */
+  .dish { padding: clamp(48px, 9vw, 120px) 0; }
+  .dish + .dish { border-top: 1px solid var(--border); }
+  .dish-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: clamp(32px, 6vw, 88px);
+    align-items: center;
+  }
+  .flip .dish-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+  .flip .frame { order: 2; }
+  .dish { scroll-margin-top: 24px; }
+
+  .frame { position: relative; width: 100%; max-width: calc(80vh * 0.75); justify-self: center; }
+  .plate {
     display: block;
     width: 100%;
     padding: 0;
     border: 0;
-    border-radius: 18px;
+    border-radius: 6px;
     overflow: hidden;
-    cursor: zoom-in;
     background: var(--border);
-    color: #fff;
-    text-align: left;
-    font: inherit;
-    transform-style: preserve-3d;
-    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease;
-    box-shadow: 0 1px 0 var(--border);
+    cursor: zoom-in;
+    box-shadow: 0 40px 70px -40px rgba(0, 0, 0, 0.55);
   }
-  .tile:hover { box-shadow: 0 28px 50px -30px rgba(0, 0, 0, 0.65); }
-  .tile :global(img) {
+  .plate :global(img) {
     display: block;
     width: 100%;
     height: auto;
-    transition: transform 0.9s cubic-bezier(.2,.8,.2,1), filter 0.6s ease;
+    transition: transform 1.2s cubic-bezier(.2,.8,.2,1);
   }
-  .tile:hover :global(img), .tile:focus-visible :global(img) { transform: scale(1.06); filter: saturate(1.12); }
-  .tile::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(10, 10, 8, 0.82), rgba(10, 10, 8, 0.15) 45%, transparent 70%);
-    pointer-events: none;
-  }
-  .shine {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    opacity: 0;
-    background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.22), transparent 45%);
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  .tile:hover .shine { opacity: 1; }
-  .meta {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    padding: 18px 18px 16px;
+  .plate:hover :global(img) { transform: scale(1.035); }
+  .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+
+  .text { max-width: 420px; }
+  .no {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 1.4rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--accent);
   }
-  .meta .t { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; line-height: 1.2; }
-  .meta .c {
-    font-size: 0.88rem;
-    line-height: 1.45;
-    opacity: 0.85;
+  .no::after { content: ''; flex: 1; max-width: 80px; height: 1px; background: currentColor; opacity: 0.5; order: 1; }
+  .kinds {
+    order: 2;
+    font-family: var(--sans);
+    font-style: normal;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
-  @media (hover: hover) {
-    .meta .c { opacity: 0; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(.2,.8,.2,1), opacity 0.35s ease; }
-    .tile:hover .meta .c, .tile:focus-visible .meta .c { opacity: 0.88; max-height: 6em; }
+  .text h2 { font-size: clamp(2rem, 4.2vw, 3.1rem); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.5em; }
+  .caption { color: var(--muted); font-size: 1.08rem; line-height: 1.7; }
+  .recipe { font-weight: 500; text-decoration: none; }
+  .recipe span { display: inline-block; transition: transform 0.25s ease; }
+  .recipe:hover span { transform: translateX(4px); }
+
+  /* Photos uncover as they scroll into view, then drift slightly (where supported). */
+  @media (prefers-reduced-motion: no-preference) {
+    .js .frame[data-reveal] { transform: none; }
+    .js .frame[data-reveal] .plate {
+      clip-path: inset(12% 8% 12% 8% round 6px);
+      transition: clip-path 1.3s cubic-bezier(.2,.8,.2,1);
+    }
+    .js .frame[data-reveal].in .plate { clip-path: inset(0 0 0 0 round 6px); }
+    @supports (animation-timeline: view()) {
+      .frame { animation: drift linear both; animation-timeline: view(); }
+      @keyframes drift { from { translate: 0 40px; } to { translate: 0 -40px; } }
+    }
   }
-  .tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
   /* ---------- Lightbox ---------- */
   .lightbox {
@@ -503,7 +404,7 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
     background: transparent;
     color: #f2f0ea;
   }
-  .lightbox::backdrop { background: rgba(8, 9, 8, 0.86); backdrop-filter: blur(14px) saturate(0.8); }
+  .lightbox::backdrop { background: rgba(8, 9, 8, 0.9); backdrop-filter: blur(14px) saturate(0.8); }
   :global(html.lb-open) { overflow: hidden; }
   .lb-inner { position: relative; height: 100%; display: grid; place-items: center; padding: 64px 84px; }
   .lightbox figure {
@@ -521,15 +422,13 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
     max-height: calc(100dvh - 128px);
     width: auto;
     height: auto;
-    border-radius: 16px;
+    border-radius: 6px;
     box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8);
   }
-  .lb-count { font-family: var(--serif); font-style: italic; color: #e0763a; letter-spacing: 0.06em; }
+  .lb-count { font-family: var(--serif); font-style: italic; color: #e0a36a; letter-spacing: 0.04em; }
   .lb-title { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: 0.3em 0 0.4em; }
   .lb-caption { color: rgba(242, 240, 234, 0.75); }
   .lb-recipe[hidden] { display: none; }
-  .lb-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
-  .lb-tags :global(.tag) { background: rgba(255, 255, 255, 0.1); color: #f2f0ea; text-transform: capitalize; }
   .lb-btn {
     position: absolute;
     display: grid;
@@ -554,32 +453,29 @@ const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
 
   /* ---------- Entrance ---------- */
   @media (prefers-reduced-motion: no-preference) {
-    .rise { opacity: 0; animation: up 0.9s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(80ms + var(--i) * 110ms); }
-    .scribble path { stroke-dashoffset: 260; animation: draw 1s cubic-bezier(.6,.1,.2,1) 0.75s forwards; }
-    .chef.rise { animation-name: pop; }
+    .rise { opacity: 0; animation: up 1s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(80ms + var(--i) * 120ms); }
   }
   @keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-  @keyframes pop { from { opacity: 0; transform: scale(0.85) rotate(-8deg); } to { opacity: 1; transform: none; } }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
   @media (prefers-reduced-motion: reduce) {
-    .glow, .ring, .track { animation: none; }
-    .tile, .tile :global(img) { transition: none; }
+    .plate :global(img) { transition: none; }
   }
 
   /* ---------- Small screens ---------- */
-  @media (max-width: 760px) {
-    .g-hero { padding-top: 100px; }
-    .g-hero-inner { grid-template-columns: 1fr; gap: 28px; }
-    .chef { order: -1; width: 200px; height: 200px; }
-    .chef-photo { width: 138px; height: 138px; }
-    .stats { gap: 26px; }
+  @media (max-width: 820px) {
+    .cover { padding-top: 40px; }
+    .cover-grid { grid-template-columns: 1fr; gap: 40px; }
+    .dish-grid { grid-template-columns: 1fr; gap: 28px; }
+    .flip .dish-grid { grid-template-columns: 1fr; }
+    .flip .frame { order: 0; }
+    .frame { max-width: none; }
+    .text { max-width: none; }
     .lb-inner { padding: 64px 16px 24px; place-items: start center; overflow-y: auto; }
     .lightbox figure { grid-template-columns: 1fr; gap: 18px; }
     .lb-img { max-width: 100%; max-height: 62dvh; margin: 0 auto; }
     .lb-prev, .lb-next { top: auto; bottom: 16px; margin: 0; }
     .lb-prev { left: auto; right: 76px; }
   }
-  @media (max-width: 560px) {
-    .masonry { columns: 1; }
+  @media (max-width: 480px) {
+    .c-tag { display: none; }
   }
 </style>
