@@ -1,4 +1,4 @@
-import { defineCollection } from 'astro:content';
+import { defineCollection, reference } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
@@ -28,4 +28,19 @@ const recipes = defineCollection({
   }),
 });
 
-export const collections = { projects, recipes };
+// Food gallery: one Markdown file per dish, photo in ./images. See _template.md.
+const gallery = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/gallery' }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      caption: z.string(),
+      image: image(),
+      alt: z.string(),
+      tags: z.array(z.string()).default([]),
+      order: z.number().default(100),
+      recipe: reference('recipes').optional(),
+    }),
+});
+
+export const collections = { projects, recipes, gallery };
