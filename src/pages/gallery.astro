@@ -1,0 +1,585 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture, getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import portrait from '../assets/dylan-portrait.jpg';
+
+// Each dish is a Markdown file in src/content/gallery (see _template.md there).
+const entries = (await getCollection('gallery')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+);
+
+const dishes = await Promise.all(
+  entries.map(async (e, i) => {
+    const large = await getImage({ src: e.data.image, width: 1600, format: 'webp', quality: 82 });
+    return { ...e.data, id: e.id, large: large.src, recipeHref: e.data.recipe && `/recipes/${e.data.recipe.id}/` };
+  }),
+);
+
+const tagCounts = new Map<string, number>();
+for (const d of dishes) for (const t of d.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+const tags = [...tagCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const pizzaNights = tagCounts.get('pizza') ?? 0;
+const ring = 'home cook 🍕 pizza nerd 🍕 engineer by day 🍕 ';
+---
+
+<Base title="Food gallery" description="A gallery of dishes Dylan has cooked: pizza, crunchwraps, crispy chicken and more.">
+  <section class="g-hero">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="container g-hero-inner">
+      <div class="g-copy">
+        <p class="eyebrow rise" style="--i:0">Kitchen gallery</p>
+        <h1 class="rise" style="--i:1">
+          Things I've <em class="scribble">cooked<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14 C 40 4, 80 4, 118 11 S 178 17, 197 6" /></svg></em>
+        </h1>
+        <p class="g-sub rise" style="--i:2">
+          Mostly pizza, if we're being honest. Everything here came out of my own kitchen, usually after too much time spent
+          tweaking the dough.
+        </p>
+        <dl class="stats rise" style="--i:3">
+          <div><dt>Dishes</dt><dd data-count={dishes.length}>{dishes.length}</dd></div>
+          <div><dt>Pizza nights</dt><dd data-count={pizzaNights}>{pizzaNights}</dd></div>
+          <div><dt>Heart-shaped</dt><dd data-count="1">1</dd></div>
+        </dl>
+      </div>
+
+      <div class="chef rise" style="--i:2">
+        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+          <defs><path id="ring-path" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0" /></defs>
+          <text><textPath href="#ring-path" textLength="538" lengthAdjust="spacing">{ring}</textPath></text>
+        </svg>
+        <div class="chef-photo">
+          <Picture src={portrait} widths={[240, 440]} sizes="220px" formats={['avif', 'webp']} alt="Dylan, smiling, in a white shirt and black tie" loading="eager" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ribbon" aria-hidden="true">
+    <div class="marquee">
+      <div class="track">
+        {[0, 1].map(() => (
+          <span>
+            {dishes.map((d) => (
+              <>
+                {d.title}
+                <i>✺</i>
+              </>
+            ))}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="g-filters" role="group" aria-label="Filter dishes" data-reveal>
+        <button class="pill active" data-tag="" aria-pressed="true">All <sup>{dishes.length}</sup></button>
+        {tags.map(([t, c]) => (
+          <button class="pill" data-tag={t} aria-pressed="false">
+            {t} <sup>{c}</sup>
+          </button>
+        ))}
+      </div>
+
+      <ul class="masonry" id="dishes">
+        {
+          dishes.map((d, i) => (
+            <li class="cell" data-tags={d.tags.join(',')} data-reveal style={`--d:${i % 3}; view-transition-name: dish-${d.id}`}>
+              <button
+                class="tile"
+                type="button"
+                data-index={i}
+                data-title={d.title}
+                data-caption={d.caption}
+                data-tags={d.tags.join(',')}
+                data-large={d.large}
+                data-alt={d.alt}
+                data-recipe={d.recipeHref || undefined}
+                aria-label={`Open photo: ${d.title}`}
+              >
+                <Picture
+                  src={d.image}
+                  widths={[420, 700, 1000]}
+                  sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 340px"
+                  formats={['avif', 'webp']}
+                  alt={d.alt}
+                  loading={i < 3 ? 'eager' : 'lazy'}
+                />
+                <span class="shine" aria-hidden="true" />
+                <span class="meta">
+                  <span class="t">{d.title}</span>
+                  <span class="c">{d.caption}</span>
+                </span>
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <dialog class="lightbox" aria-label="Dish photo">
+    <div class="lb-inner">
+      <figure>
+        <div class="lb-frame"><img class="lb-img" alt="" decoding="async" /></div>
+        <figcaption>
+          <span class="lb-count"></span>
+          <h2 class="lb-title"></h2>
+          <p class="lb-caption"></p>
+          <div class="lb-tags"></div>
+          <a class="btn primary lb-recipe" hidden>Get the recipe →</a>
+        </figcaption>
+      </figure>
+      <button class="lb-btn lb-prev" type="button" aria-label="Previous dish">←</button>
+      <button class="lb-btn lb-next" type="button" aria-label="Next dish">→</button>
+      <button class="lb-btn lb-close" type="button" aria-label="Close">✕</button>
+    </div>
+  </dialog>
+</Base>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  type VT = { finished: Promise<void> };
+  const vt = (fn: () => void): Promise<void> => {
+    const start = (document as Document & { startViewTransition?: (cb: () => void) => VT }).startViewTransition;
+    if (reduce || !start) {
+      fn();
+      return Promise.resolve();
+    }
+    return start.call(document, fn).finished.catch(() => {});
+  };
+
+  /* ---------- Count-up stats ---------- */
+  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
+  if (!reduce) {
+    counters.forEach((el, k) => {
+      const end = Number(el.dataset.count);
+      const t0 = performance.now() + 500 + k * 120;
+      el.textContent = '0';
+      const step = (t: number) => {
+        const p = Math.min(Math.max((t - t0) / 900, 0), 1);
+        el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* ---------- Filters (animated with view transitions where supported) ---------- */
+  const pills = [...document.querySelectorAll<HTMLButtonElement>('.g-filters .pill')];
+  const cells = [...document.querySelectorAll<HTMLLIElement>('#dishes .cell')];
+  for (const pill of pills) {
+    pill.addEventListener('click', () => {
+      const tag = pill.dataset.tag!;
+      vt(() => {
+        pills.forEach((p) => {
+          p.classList.toggle('active', p === pill);
+          p.setAttribute('aria-pressed', String(p === pill));
+        });
+        for (const c of cells) {
+          c.hidden = !!tag && !c.dataset.tags!.split(',').includes(tag);
+          c.classList.add('in');
+        }
+      });
+    });
+  }
+
+  /* ---------- Tile tilt + glare ---------- */
+  const tiles = [...document.querySelectorAll<HTMLButtonElement>('.tile')];
+  if (fine && !reduce) {
+    for (const tile of tiles) {
+      tile.addEventListener('pointermove', (e) => {
+        const r = tile.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width;
+        const py = (e.clientY - r.top) / r.height;
+        tile.style.setProperty('--gx', `${px * 100}%`);
+        tile.style.setProperty('--gy', `${py * 100}%`);
+        tile.style.transform = `perspective(1000px) rotateX(${(py - 0.5) * -7}deg) rotateY(${(px - 0.5) * 7}deg)`;
+      });
+      tile.addEventListener('pointerleave', () => (tile.style.transform = ''));
+    }
+  }
+
+  /* ---------- Lightbox ---------- */
+  const dlg = document.querySelector<HTMLDialogElement>('.lightbox')!;
+  const img = dlg.querySelector<HTMLImageElement>('.lb-img')!;
+  const title = dlg.querySelector<HTMLElement>('.lb-title')!;
+  const caption = dlg.querySelector<HTMLElement>('.lb-caption')!;
+  const tagBox = dlg.querySelector<HTMLElement>('.lb-tags')!;
+  const count = dlg.querySelector<HTMLElement>('.lb-count')!;
+  const recipe = dlg.querySelector<HTMLAnchorElement>('.lb-recipe')!;
+  let current = -1;
+
+  const visible = () => tiles.filter((t) => !(t.parentElement as HTMLElement).hidden);
+  const thumb = (t: HTMLElement) => t.querySelector('img')!;
+
+  function fill(tile: HTMLButtonElement) {
+    const list = visible();
+    const d = tile.dataset;
+    current = Number(d.index);
+    img.src = d.large!;
+    img.alt = d.alt!;
+    title.textContent = d.title!;
+    caption.textContent = d.caption!;
+    count.textContent = `${String(list.indexOf(tile) + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
+    tagBox.replaceChildren(
+      ...d.tags!.split(',').filter(Boolean).map((t) => Object.assign(document.createElement('span'), { className: 'tag', textContent: t })),
+    );
+    recipe.hidden = !d.recipe;
+    if (d.recipe) recipe.href = d.recipe;
+  }
+
+  async function open(tile: HTMLButtonElement) {
+    const th = thumb(tile);
+    th.style.viewTransitionName = 'dish-photo';
+    fill(tile);
+    await img.decode().catch(() => {});
+    await vt(() => {
+      th.style.viewTransitionName = '';
+      img.style.viewTransitionName = 'dish-photo';
+      dlg.showModal();
+      document.documentElement.classList.add('lb-open');
+    });
+    img.style.viewTransitionName = '';
+  }
+
+  async function close() {
+    const tile = tiles[current];
+    img.style.viewTransitionName = 'dish-photo';
+    await vt(() => {
+      img.style.viewTransitionName = '';
+      if (tile) thumb(tile).style.viewTransitionName = 'dish-photo';
+      dlg.close();
+      document.documentElement.classList.remove('lb-open');
+    });
+    if (tile) {
+      thumb(tile).style.viewTransitionName = '';
+      tile.focus({ preventScroll: true });
+    }
+  }
+
+  async function go(dir: 1 | -1) {
+    const list = visible();
+    const i = list.indexOf(tiles[current]);
+    const next = list[(i + dir + list.length) % list.length];
+    if (!next || next === tiles[current]) return;
+    const pre = new Image();
+    pre.src = next.dataset.large!;
+    await pre.decode().catch(() => {});
+    dlg.dataset.dir = dir > 0 ? 'next' : 'prev';
+    vt(() => fill(next));
+  }
+
+  tiles.forEach((t) => t.addEventListener('click', () => open(t)));
+  dlg.querySelector('.lb-close')!.addEventListener('click', close);
+  dlg.querySelector('.lb-prev')!.addEventListener('click', () => go(-1));
+  dlg.querySelector('.lb-next')!.addEventListener('click', () => go(1));
+  dlg.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    close();
+  });
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg || (e.target as Element).classList.contains('lb-inner')) close();
+  });
+  dlg.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') go(1);
+    if (e.key === 'ArrowLeft') go(-1);
+  });
+
+  // Swipe between dishes on touch screens
+  let sx = 0, sy = 0;
+  dlg.addEventListener('touchstart', (e) => ((sx = e.touches[0].clientX), (sy = e.touches[0].clientY)), { passive: true });
+  dlg.addEventListener(
+    'touchend',
+    (e) => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
+    },
+    { passive: true },
+  );
+</script>
+
+<style>
+  /* ---------- Hero ---------- */
+  .g-hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin-top: -64px;
+    padding: 136px 0 56px;
+  }
+  .glow {
+    position: absolute;
+    inset: -20% -10% auto auto;
+    width: 760px;
+    height: 760px;
+    z-index: -1;
+    border-radius: 50%;
+    background:
+      radial-gradient(closest-side at 40% 40%, color-mix(in srgb, #e0763a 26%, transparent), transparent),
+      radial-gradient(closest-side at 65% 60%, color-mix(in srgb, var(--accent) 24%, transparent), transparent);
+    filter: blur(10px);
+    animation: glow 16s ease-in-out infinite alternate;
+  }
+  @keyframes glow { to { transform: translate(-60px, 50px) rotate(25deg) scale(1.1); } }
+
+  .g-hero-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 48px;
+  }
+  .g-hero h1 { font-size: clamp(2.6rem, 7.4vw, 5rem); margin-bottom: 0.35em; }
+  .scribble { position: relative; font-style: italic; color: var(--accent); white-space: nowrap; }
+  .scribble svg {
+    position: absolute;
+    left: -2%;
+    bottom: -0.12em;
+    width: 104%;
+    height: 0.32em;
+    overflow: visible;
+  }
+  .scribble path {
+    fill: none;
+    stroke: #e0763a;
+    stroke-width: 5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 260;
+    stroke-dashoffset: 0;
+  }
+  .g-sub { color: var(--muted); max-width: 46ch; font-size: 1.08rem; }
+
+  .stats { display: flex; gap: 36px; margin: 28px 0 0; flex-wrap: wrap; }
+  .stats div { display: flex; flex-direction: column-reverse; }
+  .stats dt { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .stats dd {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Portrait with rotating text ring */
+  .chef { position: relative; width: 280px; height: 280px; display: grid; place-items: center; }
+  .ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 26s linear infinite; }
+  .ring text {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    fill: var(--muted);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .chef-photo {
+    width: 196px;
+    height: 196px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 0 6px var(--bg), 0 0 0 7px var(--border), 0 24px 50px -24px rgba(0, 0, 0, 0.5);
+  }
+  .chef-photo :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+
+  /* ---------- Marquee ribbon ---------- */
+  .ribbon { overflow: hidden; padding: 24px 0; margin-top: -16px; }
+  .marquee {
+    overflow: hidden;
+    background: var(--accent);
+    color: var(--bg);
+    transform: rotate(-1.6deg);
+    margin: 8px -20px 0;
+    padding: 14px 0;
+    box-shadow: 0 16px 40px -28px rgba(0, 0, 0, 0.6);
+  }
+  .track { display: flex; width: max-content; animation: marquee 48s linear infinite; }
+  .track span { font-family: var(--serif); font-size: clamp(1.1rem, 2.4vw, 1.5rem); font-style: italic; white-space: nowrap; padding-right: 0.9em; }
+  .track i { font-style: normal; margin: 0 0.9em; opacity: 0.65; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* ---------- Filters ---------- */
+  .g-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .pill {
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.25s ease, transform 0.2s ease;
+  }
+  .pill:hover { color: var(--text); border-color: var(--accent); }
+  .pill:active { transform: scale(0.96); }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .pill sup { font-size: 0.7em; opacity: 0.7; margin-left: 2px; }
+
+  /* ---------- Masonry ---------- */
+  .masonry { list-style: none; margin: 0; padding: 0; columns: 3 300px; column-gap: 20px; }
+  .cell { break-inside: avoid; margin-bottom: 20px; }
+  .cell[hidden] { display: none; }
+  .tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: zoom-in;
+    background: var(--border);
+    color: #fff;
+    text-align: left;
+    font: inherit;
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .tile:hover { box-shadow: 0 28px 50px -30px rgba(0, 0, 0, 0.65); }
+  .tile :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.9s cubic-bezier(.2,.8,.2,1), filter 0.6s ease;
+  }
+  .tile:hover :global(img), .tile:focus-visible :global(img) { transform: scale(1.06); filter: saturate(1.12); }
+  .tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10, 10, 8, 0.82), rgba(10, 10, 8, 0.15) 45%, transparent 70%);
+    pointer-events: none;
+  }
+  .shine {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.22), transparent 45%);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .tile:hover .shine { opacity: 1; }
+  .meta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .meta .t { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; line-height: 1.2; }
+  .meta .c {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    opacity: 0.85;
+  }
+  @media (hover: hover) {
+    .meta .c { opacity: 0; max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(.2,.8,.2,1), opacity 0.35s ease; }
+    .tile:hover .meta .c, .tile:focus-visible .meta .c { opacity: 0.88; max-height: 6em; }
+  }
+  .tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- Lightbox ---------- */
+  .lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #f2f0ea;
+  }
+  .lightbox::backdrop { background: rgba(8, 9, 8, 0.86); backdrop-filter: blur(14px) saturate(0.8); }
+  :global(html.lb-open) { overflow: hidden; }
+  .lb-inner { position: relative; height: 100%; display: grid; place-items: center; padding: 64px 84px; }
+  .lightbox figure {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto minmax(220px, 300px);
+    align-items: end;
+    gap: 36px;
+    max-height: 100%;
+  }
+  .lb-frame { min-height: 0; }
+  .lb-img {
+    display: block;
+    max-width: min(62vw, 900px);
+    max-height: calc(100dvh - 128px);
+    width: auto;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.8);
+  }
+  .lb-count { font-family: var(--serif); font-style: italic; color: #e0763a; letter-spacing: 0.06em; }
+  .lb-title { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: 0.3em 0 0.4em; }
+  .lb-caption { color: rgba(242, 240, 234, 0.75); }
+  .lb-recipe[hidden] { display: none; }
+  .lb-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .lb-tags :global(.tag) { background: rgba(255, 255, 255, 0.1); color: #f2f0ea; text-transform: capitalize; }
+  .lb-btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #f2f0ea;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .lb-btn:hover { background: rgba(255, 255, 255, 0.16); transform: scale(1.06); }
+  .lb-prev { left: 20px; top: 50%; margin-top: -24px; }
+  .lb-next { right: 20px; top: 50%; margin-top: -24px; }
+  .lb-close { right: 20px; top: 20px; }
+
+  ::view-transition-group(dish-photo) { animation-duration: 520ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+  ::view-transition-old(dish-photo), ::view-transition-new(dish-photo) { height: 100%; object-fit: cover; }
+
+  /* ---------- Entrance ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { opacity: 0; animation: up 0.9s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(80ms + var(--i) * 110ms); }
+    .scribble path { stroke-dashoffset: 260; animation: draw 1s cubic-bezier(.6,.1,.2,1) 0.75s forwards; }
+    .chef.rise { animation-name: pop; }
+  }
+  @keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.85) rotate(-8deg); } to { opacity: 1; transform: none; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .glow, .ring, .track { animation: none; }
+    .tile, .tile :global(img) { transition: none; }
+  }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 760px) {
+    .g-hero { padding-top: 100px; }
+    .g-hero-inner { grid-template-columns: 1fr; gap: 28px; }
+    .chef { order: -1; width: 200px; height: 200px; }
+    .chef-photo { width: 138px; height: 138px; }
+    .stats { gap: 26px; }
+    .lb-inner { padding: 64px 16px 24px; place-items: start center; overflow-y: auto; }
+    .lightbox figure { grid-template-columns: 1fr; gap: 18px; }
+    .lb-img { max-width: 100%; max-height: 62dvh; margin: 0 auto; }
+    .lb-prev, .lb-next { top: auto; bottom: 16px; margin: 0; }
+    .lb-prev { left: auto; right: 76px; }
+  }
+  @media (max-width: 560px) {
+    .masonry { columns: 1; }
+  }
+</style>

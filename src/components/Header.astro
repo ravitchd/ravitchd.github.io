@@ -5,6 +5,7 @@ const links = [
   { href: '/resume/', label: 'Resume' },
   { href: '/projects/', label: 'Projects' },
   { href: '/recipes/', label: 'Recipes' },
+  { href: '/gallery/', label: 'Gallery' },
 ];
 const path = Astro.url.pathname;
 ---
@@ -80,6 +81,14 @@ const path = Astro.url.pathname;
   nav a[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }
   @media (max-width: 480px) {
     .brand { font-size: 1rem; }
-    nav a { padding: 0.35rem 0.5rem; font-size: 0.88rem; }
+    nav { gap: 0; }
+    nav a { padding: 0.35rem 0.45rem; font-size: 0.86rem; }
+    nav a::after { left: 0.45rem; right: 0.45rem; }
+  }
+  @media (max-width: 400px) {
+    .bar { gap: 8px; }
+    .brand { font-size: 0.92rem; }
+    nav a { padding: 0.3rem 0.3rem; font-size: 0.78rem; }
+    nav a::after { left: 0.3rem; right: 0.3rem; }
   }
 </style>
