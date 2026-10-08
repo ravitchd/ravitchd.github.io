@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import { batches, count, summary, CATEGORY_LABEL } from '../../data/recipes';
 
 export async function getStaticPaths() {
   const recipes = await getCollection('recipes');
@@ -9,7 +10,9 @@ export async function getStaticPaths() {
 
 const { recipe } = Astro.props;
 const { Content } = await render(recipe);
-const { title, description, tags, prepTime, cookTime, servings } = recipe.data;
+const { title, description, tags, category, prepTime, cookTime, servings, notes, source } = recipe.data;
+const list = batches(recipe);
+const scalable = list.length === 1 && count(list[0].ingredients) > 0;
 const facts = [
   prepTime && ['Prep', prepTime],
   cookTime && ['Cook', cookTime],
@@ -17,113 +20,555 @@ const facts = [
 ].filter(Boolean) as [string, string][];
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description ?? `${title}: ${summary(recipe)}.`}>
   <article class="section">
-    <div class="container prose">
-      <a href="/recipes/">← All recipes</a>
-      <h1 style={`margin-top: 1rem; view-transition-name: r-${recipe.id}`}>{title}</h1>
-      <p class="muted">{description}</p>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">{tags.map((t) => <span class="tag">{t}</span>)}</div>
-      {
-        facts.length > 0 && (
-          <dl class="facts">
-            {facts.map(([k, v]) => (
-              <div>
-                <dt>{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-          </dl>
-        )
-      }
-      <div class="tools">
-        <button class="btn" id="cook" type="button" aria-pressed="false" data-magnetic>
-          <span aria-hidden="true">🍳</span> Cook mode
+    <div class="container">
+      <a class="back" href={`/recipes/#${category}`}>← The menu</a>
+      <header class="head">
+        <p class="eyebrow">{CATEGORY_LABEL[category]}</p>
+        <h1 style={`view-transition-name: r-${recipe.id}`}>{title}</h1>
+        {description && <p class="lede muted">{description}</p>}
+        <p class="meta">
+          {summary(recipe)}
+          {facts.map(([k, v]) => <span> · {k} {v}</span>)}
+        </p>
+        {tags.length > 0 && <div class="tags">{tags.map((t) => <span class="tag">{t}</span>)}</div>}
+      </header>
+
+      <div class="controls">
+        {
+          list.length > 1 && (
+            <div class="seg" role="tablist" aria-label="Batch size">
+              {list.map((b, i) => (
+                <button type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} data-batch={i}>
+                  {b.label}
+                </button>
+              ))}
+              <span class="thumb" aria-hidden="true" />
+            </div>
+          )
+        }
+        {
+          scalable && (
+            <div class="seg" role="group" aria-label="Scale the ingredients" data-scale-group>
+              {['½', '1', '2', '3'].map((s) => (
+                <button type="button" aria-pressed={s === '1' ? 'true' : 'false'} data-scale={s === '½' ? 0.5 : Number(s)}>
+                  {s}×
+                </button>
+              ))}
+              <span class="thumb" aria-hidden="true" />
+            </div>
+          )
+        }
+        <button class="btn primary" id="cook" type="button" data-magnetic>
+          <span aria-hidden="true">▶</span> Start cooking
         </button>
-        <small class="muted">Tap ingredients to check them off. Cook mode keeps your screen awake.</small>
       </div>
-      <div class="recipe-body">
-        <Content />
-      </div>
+
+      {
+        list.map((b, bi) => (
+          <div class="layout" data-panel={bi} hidden={bi > 0}>
+            {count(b.ingredients) > 0 && (
+              <aside class="ingredients">
+                <div class="panel">
+                  <div class="panel-head">
+                    <h2>Ingredients</h2>
+                    <span class="gathered" aria-live="polite">
+                      <b>0</b>/{count(b.ingredients)}
+                    </span>
+                  </div>
+                  <div class="meter" aria-hidden="true"><span /></div>
+                  {b.makes && <p class="makes muted">Makes {b.makes}</p>}
+                  {b.ingredients.map((g) => (
+                    <div class="group">
+                      {g.title && <h3>{g.title}</h3>}
+                      <ul>
+                        {g.items.map((it) => (
+                          <li class="check" role="checkbox" aria-checked="false" tabindex="0" data-raw={it}>
+                            {it}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  {scalable && <p class="scale-note muted" hidden>Amounts scaled; the steps still read for one batch.</p>}
+                </div>
+              </aside>
+            )}
+
+            {count(b.steps) > 0 && (
+            <section class="method">
+              <div class="panel-head">
+                <h2>Method</h2>
+                <span class="gathered">
+                  <b>0</b>/{count(b.steps)} done
+                </span>
+              </div>
+              {!count(b.ingredients) && b.makes && <p class="makes muted">Makes {b.makes}</p>}
+              {b.steps.map((g) => (
+                <div class="group">
+                  {g.title && <h3>{g.title}</h3>}
+                  <ol class="steps">
+                    {g.items.map((s) => (
+                      <li tabindex="0" aria-pressed="false">
+                        <span class="txt">{s}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+              {notes.length > 0 && (
+                <aside class="notes">
+                  <h3>Notes</h3>
+                  {notes.map((n) => (
+                    <p>{n}</p>
+                  ))}
+                </aside>
+              )}
+              <div class="extra">
+                <Content />
+              </div>
+              {source && (
+                <p class="muted source">
+                  Adapted from <a href={source}>{new URL(source).hostname.replace(/^www\./, '')}</a>
+                </p>
+              )}
+            </section>
+            )}
+          </div>
+        ))
+      }
     </div>
   </article>
+
+  <div class="focus" id="focus" role="dialog" aria-modal="true" aria-label={`Cooking ${title}`} hidden>
+    <div class="focus-top">
+      <span class="focus-title">{title}</span>
+      <span class="focus-count" id="f-count"></span>
+      <button class="x" id="f-close" type="button" aria-label="Close cook mode">✕</button>
+    </div>
+    <div class="focus-bar"><span id="f-bar"></span></div>
+    <div class="focus-body">
+      <span class="focus-num" id="f-num" aria-hidden="true"></span>
+      <p class="focus-text" id="f-text" aria-live="polite"></p>
+    </div>
+    <div class="focus-nav">
+      <button class="btn" id="f-prev" type="button">← Back</button>
+      <small class="muted hint">Arrow keys or swipe · screen stays awake</small>
+      <button class="btn primary" id="f-next" type="button">Next →</button>
+    </div>
+  </div>
 </Base>
 
 <script>
-  const body = document.querySelector('.recipe-body')!;
-  body.querySelectorAll('ul li').forEach((li) => {
-    li.classList.add('check');
-    li.setAttribute('role', 'checkbox');
-    li.setAttribute('aria-checked', 'false');
-    li.setAttribute('tabindex', '0');
-    const toggle = () => li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true'));
-    li.addEventListener('click', toggle);
-    li.addEventListener('keydown', (e) => {
-      if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault();
-        toggle();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
+  let active = panels[0];
+  const refresh = new Map<HTMLElement, () => void>();
+
+  /* ---- Ingredient checklist and step tracking, per batch ---- */
+  for (const panel of panels) {
+    const ing = panel.querySelector('.ingredients');
+    const items = [...panel.querySelectorAll<HTMLLIElement>('li.check')];
+    const steps = [...panel.querySelectorAll<HTMLLIElement>('.steps li')];
+    const update = () => {
+      if (ing) {
+        const n = items.filter((li) => li.getAttribute('aria-checked') === 'true').length;
+        ing.querySelector('.gathered b')!.textContent = String(n);
+        (ing.querySelector('.meter span') as HTMLElement).style.transform = `scaleX(${n / items.length})`;
+        ing.classList.toggle('all', n === items.length);
       }
+      const done = steps.filter((li) => li.getAttribute('aria-pressed') === 'true').length;
+      const b = panel.querySelector('.method .gathered b');
+      if (b) b.textContent = String(done);
+    };
+    const bind = (li: HTMLLIElement, attr: string) => {
+      const toggle = () => {
+        li.setAttribute(attr, String(li.getAttribute(attr) !== 'true'));
+        update();
+      };
+      li.addEventListener('click', toggle);
+      li.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    };
+    refresh.set(panel, update);
+    items.forEach((li) => bind(li, 'aria-checked'));
+    steps.forEach((li) => bind(li, 'aria-pressed'));
+  }
+
+  /* ---- Segmented controls: a sliding thumb under the selected button ---- */
+  function placeThumb(seg: HTMLElement, btn: HTMLElement) {
+    const thumb = seg.querySelector<HTMLElement>('.thumb')!;
+    thumb.style.width = `${btn.offsetWidth}px`;
+    thumb.style.transform = `translateX(${btn.offsetLeft - 4}px)`;
+  }
+  document.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
+    const on = seg.querySelector<HTMLElement>('[aria-selected="true"],[aria-pressed="true"]');
+    if (on) placeThumb(seg, on);
+    window.addEventListener('resize', () => {
+      const cur = seg.querySelector<HTMLElement>('[aria-selected="true"],[aria-pressed="true"]');
+      if (cur) placeThumb(seg, cur);
+    });
+    requestAnimationFrame(() => seg.classList.add('ready'));
+  });
+
+  /* ---- Batch sizes (full / half, 18 / 24 / 30 eggs) ---- */
+  document.querySelectorAll<HTMLButtonElement>('[data-batch]').forEach((btn, _, all) => {
+    btn.addEventListener('click', () => {
+      all.forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
+      placeThumb(btn.parentElement!, btn);
+      const i = Number(btn.dataset.batch);
+      panels.forEach((p, pi) => (p.hidden = pi !== i));
+      active = panels[i];
+      if (!reduce) active.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
     });
   });
-  const steps = [...body.querySelectorAll<HTMLLIElement>('ol li')];
-  steps.forEach((li) =>
-    li.addEventListener('click', () => steps.forEach((s) => s.classList.toggle('current', s === li))),
-  );
 
-  const btn = document.getElementById('cook')!;
-  let lock: WakeLockSentinel | null = null;
-  btn.addEventListener('click', async () => {
-    const on = btn.getAttribute('aria-pressed') !== 'true';
-    btn.setAttribute('aria-pressed', String(on));
-    document.body.classList.toggle('cooking', on);
-    try {
-      if (on && 'wakeLock' in navigator) lock = await navigator.wakeLock.request('screen');
-      else if (lock) {
-        await lock.release();
-        lock = null;
-      }
-    } catch {
-      /* wake lock not available; cook mode still enlarges the text */
+  /* ---- Scale ingredient amounts ---- */
+  const FRAC: Record<string, number> = { '½': 1 / 2, '⅓': 1 / 3, '⅔': 2 / 3, '¼': 1 / 4, '¾': 3 / 4, '⅛': 1 / 8 };
+  const NUM = String.raw`(?:\d+(?:\.\d+)?(?:\s+[½⅓⅔¼¾⅛])?|[½⅓⅔¼¾⅛]|\d+/\d+)`;
+  const LEAD = new RegExp(String.raw`^(${NUM})(\s*-\s*(${NUM}))?`);
+  const parse = (s: string) => {
+    s = s.trim();
+    if (s.includes('/')) {
+      const [a, b] = s.split('/').map(Number);
+      return a / b;
     }
+    const m = s.match(/^(\d+(?:\.\d+)?)?\s*([½⅓⅔¼¾⅛])?$/);
+    if (!m) return NaN;
+    return (m[1] ? Number(m[1]) : 0) + (m[2] ? FRAC[m[2]] : 0);
+  };
+  const fmt = (n: number, grams: boolean) => {
+    if (grams || n >= 20) return String(Math.round(n));
+    const whole = Math.floor(n);
+    let best = '';
+    let err = Infinity;
+    for (const [sym, v] of [['', 0], ...Object.entries(FRAC), ['', 1]] as [string, number][]) {
+      const e = Math.abs(n - whole - v);
+      if (e < err) {
+        err = e;
+        best = v === 1 ? String(whole + 1) : `${whole || ''}${whole && sym ? ' ' : ''}${sym}` || '0';
+      }
+    }
+    return best;
+  };
+  // "1 teaspoon" doubled reads "2 teaspoons", and back again
+  const UNITS = ['teaspoon', 'tablespoon', 'cup', 'pound', 'package', 'clove', 'egg', 'block'];
+  function plural(rest: string, many: boolean) {
+    return rest.replace(/^(\s*(?:large\s+|heaping\s+)?)([a-z]+?)(s?)\b/i, (all, pre, word) =>
+      UNITS.includes(word.toLowerCase()) ? `${pre}${word}${many ? 's' : ''}` : all,
+    );
+  }
+  function scaleLine(raw: string, k: number) {
+    if (k === 1) return raw;
+    const m = raw.match(LEAD);
+    if (!m) return raw;
+    const grams = /^\s*g\b/.test(raw.slice(m[0].length));
+    const a = fmt(parse(m[1]) * k, grams);
+    const hi = parse(m[3] ?? m[1]) * k;
+    const b = m[3] ? `-${fmt(parse(m[3]) * k, grams)}` : '';
+    return `${a}${b}${plural(raw.slice(m[0].length), hi > 1)}`;
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-scale]').forEach((btn, _, all) => {
+    btn.addEventListener('click', () => {
+      const k = Number(btn.dataset.scale);
+      all.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      placeThumb(btn.parentElement!, btn);
+      document.querySelectorAll<HTMLLIElement>('li[data-raw]').forEach((li) => {
+        const next = scaleLine(li.dataset.raw!, k);
+        if (li.textContent === next) return;
+        li.textContent = next;
+        if (!reduce) li.animate([{ color: 'var(--accent)' }, { color: 'inherit' }], { duration: 900 });
+      });
+      const note = document.querySelector<HTMLElement>('.scale-note');
+      if (note) note.hidden = k === 1;
+    });
+  });
+
+  /* ---- Cook mode: one step at a time, big, screen kept awake ---- */
+  const focus = document.getElementById('focus')!;
+  const fText = document.getElementById('f-text')!;
+  const fNum = document.getElementById('f-num')!;
+  const fCount = document.getElementById('f-count')!;
+  const fBar = document.getElementById('f-bar')!;
+  const fPrev = document.getElementById('f-prev') as HTMLButtonElement;
+  const fNext = document.getElementById('f-next') as HTMLButtonElement;
+  const opener = document.getElementById('cook') as HTMLButtonElement;
+  let steps: HTMLLIElement[] = [];
+  let at = 0;
+  let lock: WakeLockSentinel | null = null;
+
+  function show(i: number, dir = 1) {
+    at = Math.max(0, Math.min(steps.length - 1, i));
+    fText.textContent = steps[at].querySelector('.txt')!.textContent;
+    fNum.textContent = String(at + 1).padStart(2, '0');
+    fCount.textContent = `Step ${at + 1} of ${steps.length}`;
+    fBar.style.transform = `scaleX(${(at + 1) / steps.length})`;
+    fPrev.disabled = at === 0;
+    fNext.textContent = at === steps.length - 1 ? 'Done ✓' : 'Next →';
+    if (!reduce)
+      fText.animate([{ opacity: 0, transform: `translateX(${dir * 30}px)` }, { opacity: 1, transform: 'none' }], {
+        duration: 380,
+        easing: 'cubic-bezier(.2,.8,.2,1)',
+      });
+  }
+  async function open() {
+    steps = [...active.querySelectorAll<HTMLLIElement>('.steps li')];
+    if (!steps.length) return;
+    const firstUndone = steps.findIndex((li) => li.getAttribute('aria-pressed') !== 'true');
+    focus.hidden = false;
+    document.documentElement.classList.add('cooking');
+    show(firstUndone < 0 ? 0 : firstUndone);
+    fNext.focus();
+    try {
+      if ('wakeLock' in navigator) lock = await navigator.wakeLock.request('screen');
+    } catch {
+      /* wake lock not available; cook mode still works */
+    }
+  }
+  function close() {
+    focus.hidden = true;
+    document.documentElement.classList.remove('cooking');
+    lock?.release().catch(() => {});
+    lock = null;
+    opener.focus();
+  }
+  function next() {
+    steps[at].setAttribute('aria-pressed', 'true');
+    refresh.get(active)?.();
+    if (at === steps.length - 1) return close();
+    show(at + 1, 1);
+  }
+  opener.hidden = !document.querySelector('.steps li');
+  opener.addEventListener('click', open);
+  document.getElementById('f-close')!.addEventListener('click', close);
+  fNext.addEventListener('click', next);
+  fPrev.addEventListener('click', () => show(at - 1, -1));
+  document.addEventListener('keydown', (e) => {
+    if (focus.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') show(at - 1, -1);
+  });
+  let sx = 0;
+  focus.addEventListener('touchstart', (e) => (sx = e.touches[0].clientX), { passive: true });
+  focus.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 50) (dx < 0 ? next() : show(at - 1, -1));
   });
   document.addEventListener('visibilitychange', async () => {
-    if (lock && document.visibilityState === 'visible' && 'wakeLock' in navigator)
+    if (!focus.hidden && document.visibilityState === 'visible' && 'wakeLock' in navigator)
       lock = await navigator.wakeLock.request('screen').catch(() => null);
   });
 </script>
 
 <style>
-  .tools { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0 24px; }
-  #cook[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  .recipe-body :global(li.check) {
-    list-style: none;
+  .back { font-size: 0.92rem; text-decoration: none; }
+  .head { margin: 22px 0 28px; max-width: 760px; }
+  .head h1 { font-size: clamp(2.6rem, 8vw, 5rem); letter-spacing: -0.03em; line-height: 0.98; margin-bottom: 18px; }
+  .lede { font-size: 1.15rem; }
+  .meta { color: var(--muted); font-size: 0.95rem; margin-bottom: 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 16px 0;
+    margin-bottom: 36px;
+    border-block: 1px solid var(--border);
+  }
+  .controls .btn { margin-left: auto; }
+  .controls .btn[hidden] { display: none; }
+
+  .seg {
     position: relative;
-    margin-left: -1.3em;
-    padding-left: 2em;
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .seg button {
+    position: relative;
+    z-index: 1;
+    padding: 0.42rem 0.95rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: color 0.25s ease;
+  }
+  .seg button[aria-selected='true'], .seg button[aria-pressed='true'] { color: var(--bg); }
+  .seg .thumb {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .seg.ready .thumb { transition: transform 0.4s cubic-bezier(.3,1.4,.5,1), width 0.3s ease; }
+
+  .layout { display: grid; gap: 40px; align-items: start; }
+  .layout[hidden] { display: none; }
+  .layout:not(:has(.ingredients)) .method { max-width: 780px; }
+  .layout:not(:has(.method)) .ingredients { max-width: 460px; }
+  @media (min-width: 900px) {
+    .layout:has(.ingredients):has(.method) { grid-template-columns: minmax(280px, 360px) 1fr; gap: 56px; }
+    .ingredients { position: sticky; top: 84px; }
+  }
+
+  .panel {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .panel-head h2 { margin: 0; font-size: 1.5rem; }
+  .gathered { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .gathered b { color: var(--accent); font-weight: 600; }
+  .meter { height: 3px; margin: 12px 0 14px; border-radius: 3px; background: var(--border); overflow: hidden; }
+  .meter span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s cubic-bezier(.2,.8,.2,1);
+  }
+  .ingredients.all .panel { border-color: var(--accent); }
+  .makes { font-size: 0.9rem; margin: 0 0 8px; }
+  .group h3 { font-family: var(--sans); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin: 18px 0 6px; }
+  .ingredients ul { list-style: none; margin: 0; padding: 0; }
+  li.check {
+    position: relative;
+    padding: 7px 0 7px 2em;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    cursor: pointer;
+    font-size: 0.97rem;
     transition: color 0.2s ease;
   }
-  .recipe-body :global(li.check)::before {
+  li.check:last-child { border-bottom: 0; }
+  li.check::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 0.3em;
-    width: 1.05em;
-    height: 1.05em;
+    top: 0.62em;
+    width: 1.1em;
+    height: 1.1em;
     border: 1.5px solid var(--border);
     border-radius: 6px;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.25s cubic-bezier(.3,1.6,.5,1);
   }
-  .recipe-body :global(li.check[aria-checked='true']) { color: var(--muted); text-decoration: line-through; }
-  .recipe-body :global(li.check[aria-checked='true'])::before {
+  li.check:hover::before { border-color: var(--accent); }
+  li.check[aria-checked='true'] { color: var(--muted); text-decoration: line-through; }
+  li.check[aria-checked='true']::before {
     background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/80% no-repeat;
     border-color: var(--accent);
+    transform: scale(1.12);
   }
-  .recipe-body :global(ol li) { cursor: pointer; padding: 0.3em 0.5em; border-radius: 8px; transition: background 0.2s ease; }
-  .recipe-body :global(ol li.current) { background: var(--accent-soft); }
-  :global(body.cooking) .recipe-body { font-size: 1.2rem; }
+  .scale-note { font-size: 0.82rem; margin: 12px 0 0; }
+  .scale-note[hidden] { display: none; }
 
-  .facts { display: flex; gap: 32px; margin: 24px 0 8px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .facts dt { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
-  .facts dd { margin: 0; font-weight: 600; }
+  .method .panel-head { margin-bottom: 8px; }
+  .steps { list-style: none; counter-reset: step; margin: 0; padding: 0; }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.4rem 1fr;
+    gap: 8px;
+    padding: 18px 12px 18px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background 0.25s ease, opacity 0.3s ease;
+  }
+  .steps li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.2px var(--accent);
+    transition: color 0.3s ease;
+  }
+  .steps li:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .steps li[aria-pressed='true'] { opacity: 0.5; }
+  .steps li[aria-pressed='true']::before { color: var(--accent); }
+  .steps li[aria-pressed='true'] .txt { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+  .txt { font-size: 1.05rem; padding-top: 0.25rem; }
+
+  .notes {
+    margin-top: 28px;
+    padding: 18px 22px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .notes h3 { font-family: var(--sans); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin: 0 0 6px; }
+  .notes p:last-child { margin: 0; }
+  .extra:empty { display: none; }
+  .extra { margin-top: 24px; }
+  .source { margin-top: 24px; font-size: 0.9rem; }
+
+  /* Cook mode overlay */
+  .focus {
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    padding: 20px max(24px, 6vw) 28px;
+    animation: rise 0.45s cubic-bezier(.2,.8,.2,1);
+  }
+  .focus[hidden] { display: none; }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+  :global(html.cooking) { overflow: hidden; }
+  .focus-top { display: flex; align-items: center; gap: 16px; }
+  .focus-title { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; }
+  .focus-count { color: var(--muted); font-size: 0.9rem; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .x {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .focus-bar { height: 3px; margin: 16px 0 0; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .focus-bar span { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
+  .focus-body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 900px; width: 100%; margin: 0 auto; }
+  .focus-num {
+    font-family: var(--serif);
+    font-size: clamp(4rem, 14vw, 9rem);
+    font-weight: 600;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--accent);
+  }
+  .focus-text { font-family: var(--serif); font-size: clamp(1.6rem, 4.2vw, 2.8rem); line-height: 1.25; margin: 12px 0 0; }
+  .focus-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .focus-nav .btn { font-size: 1.05rem; padding: 0.85rem 1.5rem; }
+  .focus-nav .btn:disabled { opacity: 0.4; }
+  @media (max-width: 560px) { .hint { display: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .focus { animation: none; }
+    .seg.ready .thumb, .meter span, .focus-bar span { transition: none; }
+  }
 </style>

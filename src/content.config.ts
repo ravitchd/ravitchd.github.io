@@ -15,16 +15,37 @@ const projects = defineCollection({
   }),
 });
 
+// Recipes: one Markdown file per recipe, all structured in the frontmatter so
+// a tool (like a future Instagram-to-recipe importer) can write them. See _template.md.
+const group = z.object({ title: z.string().optional(), items: z.array(z.string()) });
+// Accept either a plain list or titled groups ("For the topping"), always store groups.
+const groupList = z.union([
+  z.array(z.string()).transform((items) => (items.length ? [{ items }] : [])),
+  z.array(group),
+]);
+const groups = groupList.default([]);
+
 const recipes = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/recipes' }),
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/recipes' }),
   schema: z.object({
     title: z.string(),
-    description: z.string(),
+    category: z.enum(['savory', 'sweet', 'bread', 'technique']),
+    description: z.string().optional(),
     tags: z.array(z.string()).default([]),
     prepTime: z.string().optional(),
     cookTime: z.string().optional(),
     servings: z.number().optional(),
+    makes: z.string().optional(),
+    source: z.string().url().optional(),
     date: z.coerce.date(),
+    ingredients: groups,
+    steps: groups,
+    notes: z.array(z.string()).default([]),
+    // Alternate batches of the same recipe (half batch, 24 eggs...). Each one
+    // replaces the top-level ingredients and/or steps it lists.
+    versions: z
+      .array(z.object({ label: z.string(), makes: z.string().optional(), ingredients: groupList.optional(), steps: groupList.optional() }))
+      .default([]),
   }),
 });
 
