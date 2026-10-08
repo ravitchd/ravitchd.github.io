@@ -1,6 +1,5 @@
-// Home page motion: portrait tilt with parallax chips, a marquee that speeds up
-// and skews with scrolling, count-up stats, and the fishing photo that grows to
-// full-bleed as you scroll past it. All of it is skipped for reduced motion.
+// Home page motion: portrait tilt with parallax chips, count-up stats, and the
+// fishing photo that grows to full-bleed as you scroll past it. All of it is skipped for reduced motion.
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -28,46 +27,6 @@ function initTilt() {
   });
 }
 
-function initMarquee() {
-  const el = document.querySelector<HTMLElement>('[data-marquee]');
-  if (!el) return;
-  const track = el.querySelector<HTMLElement>('.marquee-track')!;
-  const row = track.firstElementChild as HTMLElement;
-  if (reduceMotion) return;
-
-  let x = 0;
-  let boost = 0;
-  let lastY = window.scrollY;
-  let visible = true;
-  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(el);
-  window.addEventListener(
-    'scroll',
-    () => {
-      const dy = window.scrollY - lastY;
-      lastY = window.scrollY;
-      boost = Math.max(-40, Math.min(40, boost + dy * 0.15));
-    },
-    { passive: true },
-  );
-
-  let last = performance.now();
-  const tick = (now: number) => {
-    const dt = Math.min(50, now - last);
-    last = now;
-    boost *= 0.92;
-    if (visible) {
-      const w = row.offsetWidth;
-      // scrolling down speeds it up; scrolling up briefly runs it backwards
-      const dir = boost < -0.5 ? -1 : 1;
-      x -= dir * (0.06 + Math.abs(boost) * 0.02) * dt;
-      if (x <= -w) x += w;
-      if (x > 0) x -= w;
-      track.style.transform = `translate3d(${x}px, 0, 0) skewX(${-boost * 0.35}deg)`;
-    }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
 
 function initCounters() {
   const els = document.querySelectorAll<HTMLElement>('[data-count]');
@@ -125,6 +84,5 @@ function initReel() {
 }
 
 initTilt();
-initMarquee();
 initCounters();
 initReel();

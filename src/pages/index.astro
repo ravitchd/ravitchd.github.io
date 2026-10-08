@@ -7,7 +7,7 @@ import { Picture } from 'astro:assets';
 import { SITE } from '../site';
 import portrait from '../assets/dylan-portrait.jpg';
 import fishing from '../assets/dylan-fishing.jpg';
-import { experience, skills } from '../data/resume';
+import { experience } from '../data/resume';
 
 const projects = (await getCollection('projects'))
   .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.valueOf() - a.data.date.valueOf())
@@ -16,11 +16,9 @@ const recipes = (await getCollection('recipes'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
 
-const marquee = ['Fluid delivery systems', 'Hazardous gas routing', 'Semiconductor fabs', 'SolidWorks FEA', 'Rocket airframes', 'Wind tunnel testing', 'Design for manufacturing', 'Pizza night'];
 
 const stats = [
   { value: experience.length, suffix: '', label: 'engineering roles, from the shop floor to fab design' },
-  { value: skills.length, suffix: '', label: 'CAD, analysis and design tools I work in' },
   { value: 3, suffix: 'rd', label: 'in category at Spaceport America Cup 2022' },
   { value: 2025, suffix: '', label: 'B.S. Mechanical Engineering, Washington State University' },
 ];
@@ -80,22 +78,6 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     <a class="scroll-cue" href="#work" aria-label="Scroll to projects"><span></span></a>
   </section>
 
-  <div class="marquee" data-marquee aria-hidden="true">
-    <div class="marquee-track">
-      {
-        [0, 1].map(() => (
-          <div class="marquee-row">
-            {marquee.map((m) => (
-              <span>
-                {m}
-                <i>✦</i>
-              </span>
-            ))}
-          </div>
-        ))
-      }
-    </div>
-  </div>
 
   <section class="section about" id="about">
     <div class="container about-grid">
@@ -355,34 +337,17 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
   .c2 { top: 52%; right: -16%; }
   .c3 { bottom: 6%; left: -10%; }
 
-  /* Marquee band, skews with scroll speed */
-  .marquee {
-    overflow: hidden;
-    padding: 22px 0;
-    border-block: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .marquee-track { display: flex; width: max-content; will-change: transform; }
-  .marquee-row { display: flex; }
-  .marquee-row span {
-    font-family: var(--serif);
-    font-size: clamp(1.6rem, 4vw, 2.8rem);
-    font-weight: 600;
-    white-space: nowrap;
-    padding-right: 0.6em;
-  }
-  .marquee-row span:nth-child(even) { color: transparent; -webkit-text-stroke: 1.2px var(--text); }
-  .marquee-row i { font-style: normal; color: var(--accent); font-size: 0.6em; vertical-align: 0.35em; margin-left: 0.6em; }
 
   /* About + stats */
   .about-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
   .about-copy p:not(.eyebrow) { color: var(--muted); font-size: 1.05rem; }
   .about-copy h2 { font-size: clamp(2rem, 5vw, 3.2rem); }
-  .stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stats { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
   .stats li {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 20px;
     padding: 22px;
     border-radius: var(--radius);
     background: var(--surface);
@@ -451,8 +416,8 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     .about-grid { grid-template-columns: 1fr; gap: 32px; }
   }
   @media (max-width: 480px) {
-    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stats li { padding: 16px; }
+    .stats { gap: 10px; }
+    .stats li { padding: 16px; grid-template-columns: 5.6rem minmax(0, 1fr); gap: 14px; }
     .chip { font-size: 0.74rem; padding: 0.45rem 0.75rem; }
     .reel:not(.live) .reel-frame { aspect-ratio: 4 / 3; }
     .reel-frame :global(img) { object-position: 8% 50%; transform-origin: 8% 50%; }
