@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { Picture } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import PrintStage from '../../components/PrintStage.astro';
 
@@ -24,7 +25,7 @@ const specs = [
 <Base title={d.title} description={d.summary}>
   <article class="section">
     <div class="container">
-      <a href="/prints/">← All prints</a>
+      <a href="/prints/">← All parts</a>
       <div class="head">
         <div>
           {d.example && <span class="flag">Example entry</span>}
@@ -45,7 +46,17 @@ const specs = [
       </div>
 
       <div data-reveal>
-        <PrintStage model={d.model} title={d.title} layerHeight={d.layerHeight} controls />
+        {
+          d.model ? (
+            <PrintStage model={d.model} title={d.title} layerHeight={d.layerHeight} controls />
+          ) : (
+            d.image && (
+              <div class="shot">
+                <Picture src={d.image} alt={d.alt ?? d.title} widths={[640, 1200]} sizes="(max-width: 1040px) 100vw, 992px" formats={['avif', 'webp']} />
+              </div>
+            )
+          )
+        }
       </div>
 
       <div class="cols">
@@ -91,6 +102,15 @@ const specs = [
   .head h1 { margin: 0.4rem 0 0.3rem; }
   .head p { margin: 0; max-width: 560px; }
   .files { display: flex; gap: 10px; flex-wrap: wrap; }
+  .shot {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #fff;
+    display: grid;
+    place-items: center;
+  }
+  .shot :global(img) { display: block; width: 100%; max-height: 72vh; object-fit: contain; }
   .flag {
     display: inline-block;
     padding: 0.2rem 0.65rem;
