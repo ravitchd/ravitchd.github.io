@@ -4,6 +4,7 @@ import { SITE } from '../site';
 const links = [
   { href: '/resume/', label: 'Resume' },
   { href: '/projects/', label: 'Projects' },
+  { href: '/prints/', label: 'Prints' },
   { href: '/recipes/', label: 'Recipes' },
   { href: '/gallery/', label: 'Gallery' },
 ];
@@ -12,7 +13,7 @@ const path = Astro.url.pathname;
 
 <header class="site-header">
   <div class="container bar">
-    <a class="brand" href="/">{SITE.name}</a>
+    <a class="brand" href="/" aria-label={SITE.name}><span class="full">{SITE.name}</span><span class="short" aria-hidden="true">{SITE.name.split(' ').map((w) => w[0]).join('')}</span></a>
     <nav aria-label="Main">
       {
         links.map((l) => (
@@ -53,6 +54,7 @@ const path = Astro.url.pathname;
     text-decoration: none;
     white-space: nowrap;
   }
+  .short { display: none; }
   nav { display: flex; gap: 4px; }
   nav a {
     padding: 0.4rem 0.75rem;
@@ -80,14 +82,15 @@ const path = Astro.url.pathname;
   nav a[aria-current='page']::after { display: none; }
   nav a[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }
   @media (max-width: 480px) {
-    .brand { font-size: 1rem; }
+    .brand { font-size: 1.1rem; }
+    .full { display: none; }
+    .short { display: inline; }
     nav { gap: 0; }
     nav a { padding: 0.35rem 0.45rem; font-size: 0.86rem; }
     nav a::after { left: 0.45rem; right: 0.45rem; }
   }
   @media (max-width: 400px) {
     .bar { gap: 8px; }
-    .brand { font-size: 0.92rem; }
     nav a { padding: 0.3rem 0.3rem; font-size: 0.78rem; }
     nav a::after { left: 0.3rem; right: 0.3rem; }
   }

@@ -64,4 +64,26 @@ const gallery = defineCollection({
     }),
 });
 
-export const collections = { projects, recipes, gallery };
+// 3D prints: one Markdown file per print, model files in public/prints. See _template.md.
+const prints = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/prints' }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string(),
+    // Marks a stand-in entry so the page can say so.
+    example: z.boolean().default(false),
+    model: z.string(), // path of an .stl under public/, e.g. /prints/bracket.stl
+    files: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
+    printer: z.string().optional(),
+    material: z.string().optional(),
+    layerHeight: z.number().optional(), // mm
+    infill: z.string().optional(),
+    printTime: z.string().optional(),
+    filament: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    date: z.coerce.date(),
+    order: z.number().default(100),
+  }),
+});
+
+export const collections = { projects, recipes, gallery, prints };
