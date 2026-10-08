@@ -2,83 +2,415 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import RecipeCard from '../../components/RecipeCard.astro';
+import { MENU, CATEGORIES } from '../../data/menu';
 
 const recipes = (await getCollection('recipes')).sort((a, b) => a.data.title.localeCompare(b.data.title));
-const tags = [...new Set(recipes.flatMap((r) => r.data.tags))].sort();
+const ids = new Set(recipes.map((r) => r.id));
+const titles = new Map(recipes.map((r) => [r.id, r.data.title]));
+
+const sections = CATEGORIES.map((c, i) => {
+  const written = recipes.filter((r) => r.data.category === c.id);
+  const groups = MENU[c.id].map((g) => ({
+    title: g.title,
+    items: g.items
+      .map((it) => ({ ...it, recipe: it.recipe && ids.has(it.recipe) ? it.recipe : undefined }))
+      // A dish whose recipe card has the same name already shows above
+      .filter((it) => !it.recipe || titles.get(it.recipe) !== it.name),
+  }));
+  const soon = groups.reduce((n, g) => n + g.items.filter((it) => !it.recipe).length, 0);
+  return { ...c, n: String(i + 1).padStart(2, '0'), written, groups, soon };
+});
+
+const totalSoon = sections.reduce((n, s) => n + s.soon, 0);
+const allNames = [...new Set([...recipes.map((r) => r.data.title), ...sections.flatMap((s) => s.groups.flatMap((g) => g.items.map((it) => it.name)))])];
+// Two marquee rows, interleaved so neighbours differ
+const rowA = allNames.filter((_, i) => i % 2 === 0);
+const rowB = allNames.filter((_, i) => i % 2 === 1).reverse();
+const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/` }));
 ---
 
-<Base title="Recipes" description="Recipes I cook and love.">
-  <section class="section">
+<Base title="Recipes" description="Everything on my menu, from weeknight pasta to bagels from scratch.">
+  <section class="intro">
     <div class="container">
       <p class="eyebrow">Recipes</p>
-      <h1>From the kitchen</h1>
-      <p class="muted">Dishes I make on repeat.</p>
-
-      <div class="filters">
-        <input id="q" type="search" placeholder="Search recipes…" aria-label="Search recipes" />
-        <div class="chips">
-          <button class="chip active" data-tag="">All</button>
-          {tags.map((t) => <button class="chip" data-tag={t}>{t}</button>)}
-        </div>
+      <h1 class="title">The <em>Menu</em></h1>
+      <div class="stats">
+        <div><strong data-count={recipes.length}>{recipes.length}</strong><span>recipes written up</span></div>
+        <div><strong data-count={totalSoon}>{totalSoon}</strong><span>more on the way</span></div>
+        <button class="btn primary surprise" id="surprise" type="button" data-picks={JSON.stringify(pick)}>
+          <svg class="die" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.8" /><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" /><circle cx="15.5" cy="8.5" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="8.5" cy="15.5" r="1.6" fill="currentColor" /><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor" /></svg> Surprise me
+        </button>
       </div>
+      <div class="reel" id="reel" hidden aria-live="polite">
+        <span class="reel-label">Tonight:</span>
+        <a class="reel-name" id="reel-name" href="#"></a>
+      </div>
+    </div>
 
-      <div class="grid" id="recipes">{recipes.map((r, i) => <RecipeCard recipe={r} index={i} />)}</div>
-      <p id="empty" class="muted" hidden>No recipes match.</p>
+    <div class="marquee" aria-hidden="true">
+      {
+        [rowA, rowB].map((row, r) => (
+          <div class={`track ${r ? 'rev' : ''}`}>
+            {[0, 1].map(() => (
+              <span class="run">
+                {row.map((name) => (
+                  <span class="dish">
+                    {name}
+                    <i>✦</i>
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        ))
+      }
     </div>
   </section>
+
+  <div class="toolbar">
+    <div class="container bar">
+      <input id="q" type="search" placeholder="Search the menu…" aria-label="Search the menu" autocomplete="off" />
+      <nav class="chips" aria-label="Jump to a section">
+        {
+          sections.map((s) => (
+            <a class="chip" href={`#${s.id}`} data-chip={s.id}>
+              {s.label} <span>{s.written.length + s.soon}</span>
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+
+  {
+    sections.map((s) => (
+      <section class="course" id={s.id} data-section>
+        <div class="container">
+          <header class="course-head" data-reveal>
+            <span class="num" aria-hidden="true">{s.n}</span>
+            <h2>{s.label}</h2>
+            <span class="muted">
+              {s.written.length} written up{s.soon > 0 && ` · ${s.soon} on the way`}
+            </span>
+          </header>
+
+          {s.written.length > 0 && <div class="grid">{s.written.map((r, i) => <RecipeCard recipe={r} index={i} />)}</div>}
+
+          {
+            s.soon > 0 && (
+              <div class="board" data-reveal>
+                <p class="board-title">Also on the menu <span class="muted">· recipes coming soon</span></p>
+                {s.groups.map((g) => (
+                  <div class="board-group">
+                    {g.title && <h3>{g.title}</h3>}
+                    <ul>
+                      {g.items.map((it) => (
+                        <li data-search={it.name.toLowerCase()}>
+                          {it.recipe ? (
+                            <a href={`/recipes/${it.recipe}/`}>
+                              <span class="name">{it.name}</span>
+                              <span class="dots" />
+                              <span class="state ready">recipe →</span>
+                            </a>
+                          ) : (
+                            <span class="row">
+                              <span class="name">{it.name}</span>
+                              <span class="dots" />
+                              <span class="state">soon</span>
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+        </div>
+      </section>
+    ))
+  }
+
+  <div class="container">
+    <p id="empty" class="muted empty" hidden>Nothing on the menu matches that.</p>
+  </div>
 </Base>
 
 <script>
-  const q = document.getElementById('q') as HTMLInputElement;
-  const cards = [...document.querySelectorAll<HTMLElement>('#recipes .recipe')];
-  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
-  const empty = document.getElementById('empty')!;
-  let tag = '';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---- Count-up stats ---- */
+  document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+    const end = Number(el.dataset.count);
+    if (reduce || !end) return;
+    const t0 = performance.now();
+    const dur = 1100;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    el.textContent = '0';
+    requestAnimationFrame(tick);
+  });
+
+  /* ---- Search: filters cards and the "coming soon" board ---- */
+  const q = document.getElementById('q') as HTMLInputElement;
+  const empty = document.getElementById('empty')!;
+  const sections = [...document.querySelectorAll<HTMLElement>('[data-section]')];
   function apply() {
     const term = q.value.trim().toLowerCase();
-    let shown = 0;
-    for (const c of cards) {
-      const ok = (!term || c.dataset.search!.includes(term)) && (!tag || c.dataset.tags!.split(',').includes(tag));
-      c.hidden = !ok;
-      if (ok) shown++;
+    let any = false;
+    for (const sec of sections) {
+      let shown = 0;
+      sec.querySelectorAll<HTMLElement>('[data-search]').forEach((el) => {
+        const ok = !term || el.dataset.search!.includes(term);
+        el.hidden = !ok;
+        if (ok) shown++;
+      });
+      sec.querySelectorAll<HTMLElement>('.board-group').forEach((g) => {
+        g.hidden = !g.querySelector('li:not([hidden])');
+      });
+      const board = sec.querySelector<HTMLElement>('.board');
+      if (board) board.hidden = !board.querySelector('li:not([hidden])');
+      sec.hidden = shown === 0;
+      if (shown) any = true;
     }
-    empty.hidden = shown > 0;
+    empty.hidden = any;
   }
-
   q.addEventListener('input', apply);
-  for (const chip of chips) {
-    chip.addEventListener('click', () => {
-      tag = chip.dataset.tag!;
-      chips.forEach((c) => c.classList.toggle('active', c === chip));
-      apply();
-    });
-  }
+
+  /* ---- Highlight the chip for the section in view ---- */
+  const chips = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('[data-chip]')].map((c) => [c.dataset.chip!, c]),
+  );
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) chips.forEach((c, id) => c.classList.toggle('active', id === e.target.id));
+      }
+    },
+    { rootMargin: '-45% 0px -50% 0px' },
+  );
+  sections.forEach((s) => io.observe(s));
+
+  /* ---- Surprise me: spin through recipe names, land on one ---- */
+  const btn = document.getElementById('surprise') as HTMLButtonElement;
+  const reel = document.getElementById('reel')!;
+  const name = document.getElementById('reel-name') as HTMLAnchorElement;
+  const picks: { title: string; href: string }[] = JSON.parse(btn.dataset.picks!);
+  let last = -1;
+  btn.addEventListener('click', () => {
+    let pick = Math.floor(Math.random() * picks.length);
+    if (pick === last && picks.length > 1) pick = (pick + 1) % picks.length;
+    last = pick;
+    reel.hidden = false;
+    btn.disabled = true;
+    btn.classList.add('rolling');
+    const land = () => {
+      name.textContent = picks[pick].title;
+      name.href = picks[pick].href;
+      name.classList.remove('spin');
+      name.classList.add('landed');
+      btn.disabled = false;
+      btn.classList.remove('rolling');
+      name.focus({ preventScroll: true });
+    };
+    if (reduce) return land();
+    name.classList.remove('landed');
+    let i = 0;
+    const spins = 14 + Math.floor(Math.random() * 6);
+    const step = () => {
+      if (i >= spins) return land();
+      name.textContent = picks[(pick + spins - i) % picks.length].title;
+      name.classList.remove('spin');
+      void name.offsetWidth;
+      name.classList.add('spin');
+      i++;
+      setTimeout(step, 40 + i * i * 1.1);
+    };
+    step();
+  });
 </script>
 
 <style>
-  .filters { display: flex; flex-direction: column; gap: 14px; margin: 28px 0; }
+  .intro { padding: 64px 0 0; overflow: hidden; }
+  .title {
+    font-size: clamp(3.6rem, 13vw, 8.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin: 0 0 28px;
+  }
+  .title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 40px; }
+  .stats div { display: flex; flex-direction: column; }
+  .stats strong { font-family: var(--serif); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stats span { color: var(--muted); font-size: 0.9rem; }
+  .surprise { font-size: 1rem; padding: 0.8rem 1.4rem; }
+  .surprise:disabled { cursor: progress; }
+  .die { display: block; }
+  .surprise.rolling .die { animation: roll 0.5s linear infinite; }
+  @keyframes roll { to { transform: rotate(360deg); } }
+
+  .reel {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-top: 22px;
+    min-height: 2.6rem;
+  }
+  .reel[hidden] { display: none; }
+  .reel-label { color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+  .reel-name {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .reel-name.spin { animation: tick 0.12s ease-out; }
+  .reel-name.landed { color: var(--accent); animation: land 0.5s cubic-bezier(.2,1.6,.4,1); }
+  .reel-name.landed::after { content: ' →'; }
+  @keyframes tick { from { transform: translateY(-40%); opacity: 0.2; } }
+  @keyframes land { from { transform: scale(0.85); } }
+
+  /* Scrolling ribbons of every dish on the menu */
+  .marquee {
+    margin-top: 48px;
+    padding: 18px 0;
+    border-block: 1px solid var(--border);
+    display: grid;
+    gap: 10px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .track { display: flex; width: max-content; animation: slide 90s linear infinite; }
+  .track.rev { animation-direction: reverse; animation-duration: 110s; }
+  .marquee:hover .track { animation-play-state: paused; }
+  .run { display: flex; }
+  .dish {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3.2vw, 2.1rem);
+    white-space: nowrap;
+    padding-right: 0.6em;
+  }
+  .track.rev .dish { color: transparent; -webkit-text-stroke: 1px var(--muted); }
+  .dish i { font-style: normal; color: var(--accent); font-size: 0.55em; vertical-align: middle; padding-left: 0.6em; -webkit-text-stroke: 0; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .track { animation: none; } }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    transition: top 0.35s cubic-bezier(.2,.8,.2,1);
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  /* Sit under the site header while it's showing, slide up when it tucks away */
+  :global(body:has(.site-header:not(.tucked))) .toolbar { top: 64px; }
+  .toolbar .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding-block: 12px; }
   #q {
-    width: 100%;
-    max-width: 420px;
-    padding: 0.7rem 1rem;
+    flex: 1 1 220px;
+    max-width: 360px;
+    padding: 0.6rem 1rem;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);
     font: inherit;
+    font-size: 0.95rem;
   }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: transparent;
     color: var(--muted);
-    font: inherit;
     font-size: 0.88rem;
-    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
+  .chip span { opacity: 0.6; font-variant-numeric: tabular-nums; margin-left: 2px; }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
   .chip.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  .recipe[hidden] { display: none; }
+
+  .course { padding: 64px 0 8px; scroll-margin-top: 130px; }
+  .course[hidden] { display: none; }
+  .course-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-bottom: 26px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .course-head h2 { margin: 0; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; }
+  .num {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 600;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--accent);
+  }
+  .course-head .muted { margin-left: auto; font-size: 0.9rem; }
+
+  :global(.recipe[hidden]) { display: none; }
+
+  .board {
+    margin-top: 28px;
+    padding: 28px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .board[hidden], .board-group[hidden], .board li[hidden] { display: none; }
+  .board-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .board-title .muted { font-weight: 500; letter-spacing: 0.04em; text-transform: none; }
+  .board-group + .board-group { margin-top: 22px; }
+  .board h3 { font-size: 1.05rem; margin: 0 0 6px; color: var(--accent); }
+  .board ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    columns: 3 220px;
+    column-gap: 36px;
+  }
+  .board li { break-inside: avoid; }
+  .board .row, .board li a {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 5px 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  .board .name { font-family: var(--serif); font-size: 1.02rem; }
+  .dots { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--border); transform: translateY(-4px); }
+  .state { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .state.ready { color: var(--accent); font-weight: 600; }
+  .board li a:hover .name { color: var(--accent); }
+  .board li a:hover .dots { border-color: var(--accent); }
+
+  .empty { padding: 40px 0 0; font-size: 1.05rem; }
+  .empty[hidden] { display: none; }
+
+  @media (max-width: 560px) {
+    .board { padding: 20px 18px; }
+    .course-head .muted { margin-left: 0; flex-basis: 100%; }
+  }
 </style>
