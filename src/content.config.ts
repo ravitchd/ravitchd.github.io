@@ -80,6 +80,8 @@ const prints = defineCollection({
     infill: z.string().optional(),
     printTime: z.string().optional(),
     filament: z.string().optional(),
+    // Optional link to the full write-up in src/content/projects.
+    project: reference('projects').optional(),
     tags: z.array(z.string()).default([]),
     date: z.coerce.date(),
     order: z.number().default(100),

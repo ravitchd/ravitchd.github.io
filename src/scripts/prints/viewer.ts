@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export interface PrintViewer {
   /** Total layers at the model's layer height. */
@@ -56,7 +57,8 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   scene.add(rim);
 
   // Geometry: STL files are Z-up, the scene is Y-up. Sit the part on the bed at y = 0.
-  const geometry = await new STLLoader().loadAsync(opts.url);
+  // Smooth shading across curved faces, sharp at real edges.
+  const geometry = toCreasedNormals(await new STLLoader().loadAsync(opts.url), Math.PI / 6);
   geometry.rotateX(-Math.PI / 2);
   geometry.computeBoundingBox();
   const box0 = geometry.boundingBox!;
@@ -64,7 +66,6 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   geometry.translate(-center.x, -box0.min.y, -center.z);
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
-  geometry.computeVertexNormals();
   const box = geometry.boundingBox!;
   const size = box.getSize(new THREE.Vector3());
   const height = size.y;
@@ -109,14 +110,15 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
 
   scene.add(part, cap, wire);
 
-  // Print bed: a soft plate with a 10 mm grid.
+  // Print bed: a soft plate with a 10, 20 or 50 mm grid depending on part size.
   const span = Math.max(size.x, size.z) * 1.7;
+  const cell = span / 10 < 14 ? 10 : span / 20 < 14 ? 20 : 50;
   const bedMaterial = new THREE.MeshStandardMaterial({ roughness: 0.9, transparent: true, opacity: 0.5 });
   const bed = new THREE.Mesh(new THREE.CircleGeometry(span * 0.62, 72), bedMaterial);
   bed.rotation.x = -Math.PI / 2;
   bed.position.y = -0.05;
-  const cells = Math.max(4, Math.round(span / 10));
-  const grid = new THREE.GridHelper(cells * 10, cells);
+  const cells = Math.max(4, Math.round(span / cell));
+  const grid = new THREE.GridHelper(cells * cell, cells);
   const gridMaterial = grid.material as THREE.LineBasicMaterial;
   gridMaterial.transparent = true;
   gridMaterial.opacity = 0.22;

@@ -49,7 +49,10 @@ const specs = [
       </div>
 
       <div class="cols">
-        <div class="prose"><Content /></div>
+        <div class="prose">
+          <Content />
+          {d.project && <p><a href={`/projects/${d.project.id}/`}>Read the full project write-up →</a></p>}
+        </div>
         {
           specs.length > 0 && (
             <aside data-reveal>
