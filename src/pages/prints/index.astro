@@ -5,12 +5,14 @@ import Base from '../../layouts/Base.astro';
 import PrintStage from '../../components/PrintStage.astro';
 
 // Each part is a Markdown file in src/content/prints (see _template.md there).
-// Parts with an .stl get a wide card with the live viewer; render-only CAD parts go in the grid.
+// The first part with an .stl gets the wide featured card; everything else goes in the
+// grid, with a live viewer when it has a model and its render when it doesn't.
 const parts = (await getCollection('prints')).sort(
   (a, b) => a.data.order - b.data.order || b.data.date.valueOf() - a.data.date.valueOf(),
 );
-const live = parts.filter((p) => p.data.model);
-const renders = parts.filter((p) => !p.data.model);
+const featured = parts.find((p) => p.data.model);
+const live = featured ? [featured] : [];
+const renders = parts.filter((p) => p !== featured);
 ---
 
 <Base title="CAD & 3D Prints" description="Parts Dylan has designed in SolidWorks and 3D printed, with live 3D models and the files.">
@@ -61,15 +63,19 @@ const renders = parts.filter((p) => !p.data.model);
         renders.length > 0 && (
           <>
             <div class="section-head models-head" data-reveal>
-              <h2>SolidWorks models</h2>
+              <h2>More models</h2>
               <a href="https://github.com/ravitchd/Solidworks">All files on GitHub ↗</a>
             </div>
             <div class="grid">
               {renders.map((p, i) => (
                 <a class="card model" href={`/prints/${p.id}/`} data-reveal style={`--d:${i % 3}`}>
-                  <div class="shot">
-                    <Picture src={p.data.image!} alt={p.data.alt ?? p.data.title} widths={[360, 640]} sizes="(max-width: 700px) 100vw, 340px" formats={['avif', 'webp']} />
-                  </div>
+                  {p.data.model ? (
+                    <PrintStage model={p.data.model} title={p.data.title} layerHeight={p.data.layerHeight} />
+                  ) : (
+                    <div class="shot">
+                      <Picture src={p.data.image!} alt={p.data.alt ?? p.data.title} widths={[360, 640]} sizes="(max-width: 700px) 100vw, 340px" formats={['avif', 'webp']} />
+                    </div>
+                  )}
                   <h3 style={`view-transition-name: pr-${p.id}`}>{p.data.title}</h3>
                   <p>{p.data.summary}</p>
                   <div class="tags">{p.data.tags.map((t) => <span class="tag">{t}</span>)}</div>
@@ -126,6 +132,7 @@ const renders = parts.filter((p) => !p.data.model);
   .models-head a { font-size: 0.95rem; text-decoration: none; }
   .model { padding: 12px 12px 20px; }
   .model h3, .model p, .model .tags { padding: 0 8px; }
+  .model > :global(.stage) { margin-bottom: 0.4rem; border-radius: calc(var(--radius) - 4px); }
   .shot {
     aspect-ratio: 4 / 3;
     border-radius: calc(var(--radius) - 4px);
