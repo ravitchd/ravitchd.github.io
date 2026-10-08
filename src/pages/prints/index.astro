@@ -1,0 +1,158 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import PrintStage from '../../components/PrintStage.astro';
+
+// Each part is a Markdown file in src/content/prints (see _template.md there).
+// The first part with an .stl gets the wide featured card; everything else goes in the
+// grid, with a live viewer when it has a model and its render when it doesn't.
+const parts = (await getCollection('prints')).sort(
+  (a, b) => a.data.order - b.data.order || b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const featured = parts.find((p) => p.data.model);
+const live = featured ? [featured] : [];
+const renders = parts.filter((p) => p !== featured);
+---
+
+<Base title="CAD & 3D Prints" description="Parts Dylan has designed in SolidWorks and 3D printed, with live 3D models and the files.">
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow" data-reveal>CAD &amp; 3D prints</p>
+      <h1 data-reveal style="--d:1">Designed, modeled, printed</h1>
+      <p class="lead muted" data-reveal style="--d:2">
+        Parts I've designed in SolidWorks and brought to life on the printer. Spin the 3D models, or grab the files.
+      </p>
+
+      <div class="list">
+        {
+          live.map((p, i) => {
+            const d = p.data;
+            const specs = [
+              d.material && ['Material', d.material],
+              d.layerHeight && ['Layer', `${d.layerHeight} mm`],
+              d.printTime && ['Print time', d.printTime],
+            ].filter(Boolean) as [string, string][];
+            return (
+              <a class="card print" href={`/prints/${p.id}/`} data-reveal style={`--d:${i + 3}`}>
+                <PrintStage model={d.model!} title={d.title} layerHeight={d.layerHeight} />
+                <div class="body">
+                  {d.example && <span class="flag">Example entry</span>}
+                  <h2 style={`view-transition-name: pr-${p.id}`}>{d.title}</h2>
+                  <p>{d.summary}</p>
+                  {specs.length > 0 && (
+                    <dl>
+                      {specs.map(([k, v]) => (
+                        <div>
+                          <dt>{k}</dt>
+                          <dd>{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <div class="tags">{d.tags.map((t) => <span class="tag">{t}</span>)}</div>
+                </div>
+                <span class="arrow" aria-hidden="true">↗</span>
+              </a>
+            );
+          })
+        }
+      </div>
+
+      {
+        renders.length > 0 && (
+          <>
+            <div class="section-head models-head" data-reveal>
+              <h2>More models</h2>
+              <a href="https://github.com/ravitchd/Solidworks">All files on GitHub ↗</a>
+            </div>
+            <div class="grid">
+              {renders.map((p, i) => (
+                <a class="card model" href={`/prints/${p.id}/`} data-reveal style={`--d:${i % 3}`}>
+                  {p.data.model ? (
+                    <PrintStage model={p.data.model} title={p.data.title} layerHeight={p.data.layerHeight} />
+                  ) : (
+                    <div class="shot">
+                      <Picture src={p.data.image!} alt={p.data.alt ?? p.data.title} widths={[360, 640]} sizes="(max-width: 700px) 100vw, 340px" formats={['avif', 'webp']} />
+                    </div>
+                  )}
+                  <h3 style={`view-transition-name: pr-${p.id}`}>{p.data.title}</h3>
+                  <p>{p.data.summary}</p>
+                  <div class="tags">{p.data.tags.map((t) => <span class="tag">{t}</span>)}</div>
+                  <span class="arrow" aria-hidden="true">↗</span>
+                </a>
+              ))}
+            </div>
+          </>
+        )
+      }
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initPrints } from '../../scripts/prints/main';
+  initPrints();
+</script>
+
+<style>
+  .lead { max-width: 560px; font-size: 1.08rem; }
+  .list { display: grid; gap: 24px; margin-top: 36px; }
+  .print {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+    padding: 16px;
+  }
+  .body { display: flex; flex-direction: column; gap: 0.7rem; padding: 8px 12px 8px 0; }
+  .print h2 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.8rem); }
+  .flag {
+    align-self: flex-start;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    gap: 6px 26px;
+    margin: 0.2rem 0 0;
+  }
+  dt { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  dd { margin: 0; font-weight: 600; font-size: 0.95rem; }
+
+  .models-head { margin-top: 64px; }
+  .models-head a { font-size: 0.95rem; text-decoration: none; }
+  .model { padding: 12px 12px 20px; }
+  .model h3, .model p, .model .tags { padding: 0 8px; }
+  .model > :global(.stage) { margin-bottom: 0.4rem; border-radius: calc(var(--radius) - 4px); }
+  .shot {
+    aspect-ratio: 4 / 3;
+    border-radius: calc(var(--radius) - 4px);
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 0.4rem;
+  }
+  .shot :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+  a.model:hover .shot :global(img) { transform: scale(1.06); }
+  @media (prefers-reduced-motion: reduce) {
+    a.model:hover .shot :global(img) { transform: none; }
+  }
+  @media (max-width: 760px) {
+    .print { grid-template-columns: 1fr; gap: 16px; padding: 12px; }
+    .body { padding: 4px 8px 10px; }
+  }
+</style>

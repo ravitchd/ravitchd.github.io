@@ -1,0 +1,157 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import PrintStage from '../../components/PrintStage.astro';
+
+export async function getStaticPaths() {
+  const prints = await getCollection('prints');
+  return prints.map((print) => ({ params: { id: print.id }, props: { print } }));
+}
+
+const { print } = Astro.props;
+const { Content } = await render(print);
+const d = print.data;
+const specs = [
+  ['Printer', d.printer],
+  ['Material', d.material],
+  ['Layer height', d.layerHeight && `${d.layerHeight} mm`],
+  ['Infill', d.infill],
+  ['Print time', d.printTime],
+  ['Filament', d.filament],
+].filter(([, v]) => v) as [string, string][];
+---
+
+<Base title={d.title} description={d.summary}>
+  <article class="section">
+    <div class="container">
+      <a href="/prints/">← All parts</a>
+      <div class="head">
+        <div>
+          {d.example && <span class="flag">Example entry</span>}
+          <h1 style={`view-transition-name: pr-${print.id}`}>{d.title}</h1>
+          <p class="muted">{d.summary}</p>
+        </div>
+        {
+          d.files.length > 0 && (
+            <div class="files">
+              {d.files.map((f, i) => (
+                <a class:list={['btn', { primary: i === 0 }]} href={f.href} download>
+                  <span aria-hidden="true">↓</span> {f.label}
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div data-reveal>
+        {
+          d.model ? (
+            <PrintStage model={d.model} title={d.title} layerHeight={d.layerHeight} controls />
+          ) : (
+            d.image && (
+              <div class="shot">
+                <Picture src={d.image} alt={d.alt ?? d.title} widths={[640, 1200]} sizes="(max-width: 1040px) 100vw, 992px" formats={['avif', 'webp']} />
+              </div>
+            )
+          )
+        }
+      </div>
+
+      <div class="cols">
+        <div class="prose">
+          <Content />
+          {d.project && <p><a href={`/projects/${d.project.id}/`}>Read the full project write-up →</a></p>}
+        </div>
+        {
+          specs.length > 0 && (
+            <aside data-reveal>
+              <h2>Print settings</h2>
+              {d.example && <p class="muted note">Example values</p>}
+              <dl>
+                {specs.map(([k, v]) => (
+                  <div>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </aside>
+          )
+        }
+      </div>
+    </div>
+  </article>
+</Base>
+
+<script>
+  import { initPrints } from '../../scripts/prints/main';
+  initPrints();
+</script>
+
+<style>
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px 32px;
+    flex-wrap: wrap;
+    margin: 1.2rem 0 24px;
+  }
+  .head h1 { margin: 0.4rem 0 0.3rem; }
+  .head p { margin: 0; max-width: 560px; }
+  .files { display: flex; gap: 10px; flex-wrap: wrap; }
+  .shot {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #fff;
+    display: grid;
+    place-items: center;
+  }
+  .shot :global(img) { display: block; width: 100%; max-height: 72vh; object-fit: contain; }
+  .flag {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--border));
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 40px;
+    margin-top: 40px;
+    align-items: start;
+  }
+  aside {
+    position: sticky;
+    top: 88px;
+    padding: 22px 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  aside h2 { font-size: 1.15rem; margin: 0; }
+  .note { margin: 0.2rem 0 0; font-size: 0.82rem; }
+  aside dl { margin: 1rem 0 0; display: grid; gap: 0; }
+  aside dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-weight: 600; text-align: right; }
+  @media (max-width: 820px) {
+    .cols { grid-template-columns: 1fr; gap: 24px; }
+    aside { position: static; order: -1; }
+  }
+</style>

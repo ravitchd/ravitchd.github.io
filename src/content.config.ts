@@ -64,4 +64,32 @@ const gallery = defineCollection({
     }),
 });
 
-export const collections = { projects, recipes, gallery };
+// 3D prints and CAD models: one Markdown file per part. A part with a `model`
+// (an .stl in public/prints) gets the live 3D viewer; one with only an `image`
+// (a render in ./images) is shown as a picture. See _template.md.
+const prints = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/prints' }),
+  schema: ({ image }) => z.object({
+    title: z.string(),
+    summary: z.string(),
+    // Marks a stand-in entry so the page can say so.
+    example: z.boolean().default(false),
+    model: z.string().optional(), // path of an .stl under public/, e.g. /prints/bracket.stl
+    image: image().optional(),
+    alt: z.string().optional(),
+    files: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
+    printer: z.string().optional(),
+    material: z.string().optional(),
+    layerHeight: z.number().optional(), // mm
+    infill: z.string().optional(),
+    printTime: z.string().optional(),
+    filament: z.string().optional(),
+    // Optional link to the full write-up in src/content/projects.
+    project: reference('projects').optional(),
+    tags: z.array(z.string()).default([]),
+    date: z.coerce.date(),
+    order: z.number().default(100),
+  }).refine((d) => d.model || d.image, { message: 'A part needs a model (.stl) or an image' }),
+});
+
+export const collections = { projects, recipes, gallery, prints };

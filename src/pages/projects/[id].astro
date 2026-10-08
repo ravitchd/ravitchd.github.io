@@ -10,6 +10,7 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 const { Content } = await render(project);
 const { title, summary, tech, repo, demo } = project.data;
+const print = (await getCollection('prints')).find((p) => p.data.project?.id === project.id);
 ---
 
 <Base title={title} description={summary}>
@@ -22,6 +23,7 @@ const { title, summary, tech, repo, demo } = project.data;
       <div style="display:flex;gap:12px;margin-bottom:2rem">
         {repo && <a class="btn" href={repo}>Code</a>}
         {demo && <a class="btn primary" href={demo}>Live demo</a>}
+        {print && <a class="btn" href={`/prints/${print.id}/`}>View the 3D model</a>}
       </div>
       <Content />
     </div>
