@@ -109,21 +109,22 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     </div>
   </section>
 
-  <section class="reel" data-reel>
-    <div class="reel-stage">
-      <figure class="reel-frame">
+  <section class="section offclock">
+    <div class="container offclock-grid">
+      <figure class="offclock-photo" data-reveal>
         <Picture
           src={fishing}
-          widths={[800, 1300, 1800]}
-          sizes="100vw"
+          widths={[480, 720, 960]}
+          sizes="(max-width: 820px) min(440px, 100vw), 440px"
           formats={['avif', 'webp']}
           alt="Dylan in a green rain jacket fishing from a beach while an aircraft carrier passes in the fog"
         />
-        <figcaption class="reel-copy">
-          <p class="eyebrow">Off the clock</p>
-          <p class="reel-line">When I'm not routing gas lines, I'm on the water with a rod or in the kitchen with a pizza peel.</p>
-        </figcaption>
       </figure>
+      <div class="offclock-copy">
+        <p class="eyebrow" data-reveal>Off the clock</p>
+        <h2 data-reveal style="--d:1">On the water or in the kitchen.</h2>
+        <p data-reveal style="--d:2">When I'm not routing gas lines, I'm on the water with a rod or in the kitchen with a pizza peel.</p>
+      </div>
     </div>
   </section>
 
@@ -363,48 +364,20 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
   .stats sup { font-size: 0.45em; margin-left: 2px; }
   .stats li > span { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
 
-  /* Fishing reel: the photo grows from a card to full-bleed as you scroll */
-  .reel { position: relative; }
-  .reel-frame { position: relative; margin: 0; overflow: hidden; }
-  .reel-frame :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 28% 50%; transform-origin: 28% 50%; }
-  .reel-frame::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(100deg, transparent 35%, rgba(10, 14, 16, 0.65) 100%);
-    pointer-events: none;
-  }
-  .reel-copy {
-    position: absolute;
-    z-index: 1;
-    right: clamp(20px, 6vw, 80px);
-    bottom: clamp(24px, 8vh, 80px);
-    max-width: min(460px, 80%);
-    color: #f4f2ec;
-  }
-  .reel-copy .eyebrow { color: #cfe6dc; }
-  .reel-line { font-family: var(--serif); font-size: clamp(1.3rem, 3vw, 2.1rem); line-height: 1.25; margin: 0; }
-
-  :global(.js) .reel.live { height: 220vh; }
-  :global(.js) .reel.live .reel-stage {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: grid;
-    place-items: center;
+  /* Off the clock: fishing photo beside a short note */
+  .offclock-grid { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 64px; align-items: center; }
+  .offclock-photo {
+    margin: 0;
+    border-radius: var(--radius);
     overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px -30px rgba(10, 20, 18, 0.45);
+    aspect-ratio: 4 / 5;
   }
-  :global(.js) .reel.live .reel-frame {
-    width: 100%;
-    height: 100%;
-    clip-path: inset(calc((1 - var(--p, 0)) * 12%) calc((1 - var(--p, 0)) * 16%) round calc((1 - var(--p, 0)) * 28px));
-  }
-  :global(.js) .reel.live .reel-frame :global(img) { transform: scale(calc(1.18 - var(--p, 0) * 0.18)); }
-  :global(.js) .reel.live .reel-copy {
-    opacity: clamp(0, calc(var(--p, 0) * 2.5 - 1.2), 1);
-    transform: translateY(calc((1 - var(--p, 0)) * 40px));
-  }
-  .reel:not(.live) .reel-frame { aspect-ratio: 16 / 9; max-height: 80vh; width: 100%; }
+  .offclock-photo :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .offclock-photo:hover :global(img) { transform: scale(1.03); }
+  .offclock-copy h2 { font-size: clamp(2rem, 5vw, 3.2rem); text-wrap: balance; }
+  .offclock-copy p:not(.eyebrow) { color: var(--muted); font-size: 1.05rem; max-width: 34ch; }
 
   @media (max-width: 900px) {
     .hero-inner { grid-template-columns: 1fr; gap: 56px; }
@@ -414,17 +387,17 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
   }
   @media (max-width: 820px) {
     .about-grid { grid-template-columns: 1fr; gap: 32px; }
+    .offclock-grid { grid-template-columns: 1fr; gap: 32px; }
+    .offclock-photo { width: min(440px, 100%); }
   }
   @media (max-width: 480px) {
     .stats { gap: 10px; }
     .stats li { padding: 16px; grid-template-columns: 5.6rem minmax(0, 1fr); gap: 14px; }
     .chip { font-size: 0.74rem; padding: 0.45rem 0.75rem; }
-    .reel:not(.live) .reel-frame { aspect-ratio: 4 / 3; }
-    .reel-frame :global(img) { object-position: 8% 50%; transform-origin: 8% 50%; }
-    .reel-frame::after { background: linear-gradient(to bottom, transparent 45%, rgba(10, 14, 16, 0.75) 100%); }
   }
   @media (prefers-reduced-motion: reduce) {
     .ring::before { animation: none; }
+    .offclock-photo:hover :global(img) { transform: none; }
   }
 
   @media (max-width: 640px) {

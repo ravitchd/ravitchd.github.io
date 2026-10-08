@@ -1,5 +1,5 @@
-// Home page motion: portrait tilt with parallax chips, count-up stats, and the
-// fishing photo that grows to full-bleed as you scroll past it. All of it is skipped for reduced motion.
+// Home page motion: portrait tilt with parallax chips and count-up stats.
+// All of it is skipped for reduced motion.
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -56,33 +56,6 @@ function initCounters() {
   els.forEach((el) => io.observe(el));
 }
 
-function initReel() {
-  const reel = document.querySelector<HTMLElement>('[data-reel]');
-  if (!reel || reduceMotion) return;
-  reel.classList.add('live');
-  let ticking = false;
-  const update = () => {
-    ticking = false;
-    const r = reel.getBoundingClientRect();
-    const span = r.height - window.innerHeight;
-    // reach full-bleed about two thirds of the way through, then hold
-    const p = span > 0 ? Math.min(1, Math.max(0, -r.top / (span * 0.65))) : 1;
-    reel.style.setProperty('--p', p.toFixed(4));
-  };
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(update);
-      }
-    },
-    { passive: true },
-  );
-  window.addEventListener('resize', update);
-  update();
-}
 
 initTilt();
 initCounters();
-initReel();
