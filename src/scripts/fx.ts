@@ -219,10 +219,12 @@ function initField() {
     resize();
     draw(performance.now());
   }).observe(canvas);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const recolor = () => {
     readColors();
     draw(performance.now());
-  });
+  };
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
+  window.addEventListener('themechange', recolor);
   if (reduceMotion) return;
 
   window.addEventListener(

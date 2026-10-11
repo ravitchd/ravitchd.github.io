@@ -156,10 +156,12 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   };
   applyColors();
   const scheme = window.matchMedia('(prefers-color-scheme: dark)');
-  scheme.addEventListener('change', () => {
+  const recolor = () => {
     applyColors();
     requestRender();
-  });
+  };
+  scheme.addEventListener('change', recolor);
+  window.addEventListener('themechange', recolor);
 
   // Camera: three-quarter view from above, framed to the part.
   const target = new THREE.Vector3(0, height * 0.4, 0);

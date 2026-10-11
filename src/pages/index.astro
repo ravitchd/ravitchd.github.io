@@ -189,8 +189,8 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     animation: drift 18s ease-in-out infinite alternate;
   }
   .aurora span:nth-child(1) { width: 640px; height: 640px; left: 50%; top: 0%; --blob: color-mix(in srgb, var(--accent) 30%, transparent); }
-  .aurora span:nth-child(2) { width: 520px; height: 520px; left: 68%; top: 40%; --blob: color-mix(in srgb, #d9a441 26%, transparent); animation-delay: -6s; animation-duration: 22s; }
-  .aurora span:nth-child(3) { width: 460px; height: 460px; left: 32%; top: 45%; --blob: color-mix(in srgb, #7aa6c2 22%, transparent); animation-delay: -12s; animation-duration: 26s; }
+  .aurora span:nth-child(2) { width: 520px; height: 520px; left: 68%; top: 40%; --blob: color-mix(in srgb, var(--glow-1) 26%, transparent); animation-delay: -6s; animation-duration: 22s; }
+  .aurora span:nth-child(3) { width: 460px; height: 460px; left: 32%; top: 45%; --blob: color-mix(in srgb, var(--glow-2) 22%, transparent); animation-delay: -12s; animation-duration: 26s; }
   @keyframes drift {
     0% { transform: translate(0, 0) scale(1); }
     50% { transform: translate(-60px, 40px) scale(1.12); }
@@ -313,7 +313,7 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     content: '';
     position: absolute;
     inset: -50%;
-    background: conic-gradient(from 0deg, var(--accent), #d9a441, #7aa6c2, var(--accent));
+    background: conic-gradient(from 0deg, var(--accent), var(--glow-1), var(--glow-2), var(--accent));
     animation: spin 7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(1turn); } }
