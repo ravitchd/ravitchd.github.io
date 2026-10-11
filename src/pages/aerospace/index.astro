@@ -27,7 +27,7 @@ const items = (await getCollection('aerospace')).sort(
             return (
               <a class="card item" href={`/aerospace/${p.id}/`} data-reveal style={`--d:${Math.min(i, 3) + 3}`}>
                 {d.model ? (
-                  <PrintStage model={d.model} title={d.title} />
+                  <PrintStage model={d.model} title={d.title} printIn={false} />
                 ) : d.image ? (
                   <div class="shot">
                     <Picture src={d.image} alt={d.alt ?? d.title} widths={[480, 900]} sizes="(max-width: 760px) 100vw, 560px" formats={['avif', 'webp']} />

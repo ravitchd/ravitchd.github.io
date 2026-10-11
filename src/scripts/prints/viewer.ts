@@ -25,6 +25,8 @@ interface Options {
   interactive?: boolean;
   /** How long the print-in takes, in ms. */
   duration?: number;
+  /** false shows a finished model: no layer lines, nozzle or print-in. */
+  printIn?: boolean;
   onLevel?(layer: number, layers: number): void;
 }
 
@@ -39,6 +41,7 @@ function cssColor(name: string, fallback: string) {
 export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Promise<PrintViewer> {
   const layerHeight = opts.layerHeight ?? 0.2;
   const duration = opts.duration ?? 3400;
+  const printIn = opts.printIn ?? true;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -76,7 +79,7 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
 
   const material = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05, clippingPlanes: [plane] });
   // Faint layer lines, faded out when they get too fine to draw cleanly.
-  material.onBeforeCompile = (shader) => {
+  if (printIn) material.onBeforeCompile = (shader) => {
     shader.uniforms.uLayer = { value: layerHeight };
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying float vModelY;')
@@ -284,7 +287,7 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
       visible = e.isIntersecting;
       if (visible && !started) {
         started = true;
-        if (!reduceMotion) {
+        if (printIn && !reduceMotion) {
           setCut(0);
           animStart = 0;
         }

@@ -1,18 +1,22 @@
 ---
-// The 3D viewer for one print. `controls` adds the slicer-style layer scrubber.
+// The 3D viewer for one print. `controls` adds orbit controls and the toolbar;
+// `printIn` (default on) adds the layer-by-layer print animation and scrubber.
+// Turn it off for parts that weren't 3D printed, like the rockets.
 interface Props {
   model: string;
   title: string;
   layerHeight?: number;
   controls?: boolean;
+  printIn?: boolean;
 }
-const { model, title, layerHeight = 0.2, controls = false } = Astro.props;
+const { model, title, layerHeight = 0.2, controls = false, printIn = true } = Astro.props;
 ---
 
 <div class:list={['stage', { big: controls }]} data-print-stage>
   <canvas
     data-print={model}
     data-layer-height={layerHeight}
+    data-print-in={printIn ? undefined : 'false'}
     data-interactive={controls ? '' : undefined}
     data-cursor={controls ? '' : undefined}
     role="img"
@@ -22,14 +26,20 @@ const { model, title, layerHeight = 0.2, controls = false } = Astro.props;
   {
     controls && (
       <div class="tools">
-        <label class="scrub">
-          <span class="lbl">Layer</span>
-          <input type="range" min="0" max="1" step="0.001" value="1" data-layer aria-label="Show the model up to this layer" />
-          <output data-layer-readout>–</output>
-        </label>
-        <button type="button" class="tool" data-replay>
-          Replay print
-        </button>
+        {
+          printIn && (
+            <>
+              <label class="scrub">
+                <span class="lbl">Layer</span>
+                <input type="range" min="0" max="1" step="0.001" value="1" data-layer aria-label="Show the model up to this layer" />
+                <output data-layer-readout>–</output>
+              </label>
+              <button type="button" class="tool" data-replay>
+                Replay print
+              </button>
+            </>
+          )
+        }
         <button type="button" class="tool" data-wire aria-pressed="false">
           Wireframe
         </button>
