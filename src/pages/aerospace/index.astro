@@ -1,0 +1,138 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import PrintStage from '../../components/PrintStage.astro';
+
+// Each project is a Markdown file in src/content/aerospace (see _template.md there).
+// Every project gets a wide row: its 3D model, its photo, or a placeholder panel.
+const items = (await getCollection('aerospace')).sort(
+  (a, b) => a.data.order - b.data.order || b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base title="Aerospace" description="Rockets and flight hardware Dylan has designed, with live 3D models and the files.">
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow" data-reveal>Aerospace</p>
+      <h1 data-reveal style="--d:1">Built to fly</h1>
+      <p class="lead muted" data-reveal style="--d:2">
+        Rocketry and flight hardware, from a competition airframe to test builds. Spin the 3D models, or grab the files.
+      </p>
+
+      <div class="list">
+        {
+          items.map((p, i) => {
+            const d = p.data;
+            return (
+              <a class="card item" href={`/aerospace/${p.id}/`} data-reveal style={`--d:${Math.min(i, 3) + 3}`}>
+                {d.model ? (
+                  <PrintStage model={d.model} title={d.title} printIn={false} />
+                ) : d.image ? (
+                  <div class="shot">
+                    <Picture src={d.image} alt={d.alt ?? d.title} widths={[480, 900]} sizes="(max-width: 760px) 100vw, 560px" formats={['avif', 'webp']} />
+                  </div>
+                ) : (
+                  <div class="blank" aria-hidden="true">
+                    <span>{d.category}</span>
+                  </div>
+                )}
+                <div class="body">
+                  <span class="kicker">{d.category}</span>
+                  <h2 style={`view-transition-name: ae-${p.id}`}>{d.title}</h2>
+                  <p>{d.summary}</p>
+                  {d.tools.length > 0 && (
+                    <ul class="tools" aria-label="Tools">
+                      {d.tools.map((t) => <li>{t}</li>)}
+                    </ul>
+                  )}
+                  <div class="tags">{d.tags.map((t) => <span class="tag">{t}</span>)}</div>
+                </div>
+                <span class="arrow" aria-hidden="true">↗</span>
+              </a>
+            );
+          })
+        }
+      </div>
+
+      <p class="more muted" data-reveal>
+        Looking for parts and fixtures? They're on the <a href="/prints/">3D design</a> page.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initPrints } from '../../scripts/prints/main';
+  initPrints();
+</script>
+
+<style>
+  .lead { max-width: 560px; font-size: 1.08rem; }
+  .list { display: grid; gap: 24px; margin-top: 36px; }
+  .item {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+    padding: 16px;
+  }
+  .item:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+  .item:nth-child(even) > :first-child { order: 2; }
+  .body { display: flex; flex-direction: column; gap: 0.7rem; padding: 8px 12px; }
+  .item h2 { margin: 0; font-size: clamp(1.4rem, 2.6vw, 1.8rem); }
+  .item p { margin: 0; }
+  .kicker {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.1rem 0 0; padding: 0; list-style: none; }
+  .tools li {
+    padding: 0.25rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .shot, .blank {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .shot :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+  a.item:hover .shot :global(img) { transform: scale(1.04); }
+  .blank {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%),
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--border) 70%, transparent) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--border) 70%, transparent) 0 1px, transparent 1px 28px),
+      var(--surface);
+  }
+  .blank span {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--accent);
+  }
+  .more { margin-top: 48px; }
+  @media (prefers-reduced-motion: reduce) {
+    a.item:hover .shot :global(img) { transform: none; }
+  }
+  @media (max-width: 760px) {
+    .item, .item:nth-child(even) { grid-template-columns: 1fr; gap: 16px; padding: 12px; }
+    .item:nth-child(even) > :first-child { order: 0; }
+    .body { padding: 4px 8px 10px; }
+  }
+</style>

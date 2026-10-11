@@ -15,10 +15,10 @@ const live = featured ? [featured] : [];
 const renders = parts.filter((p) => p !== featured);
 ---
 
-<Base title="CAD & 3D Prints" description="Parts Dylan has designed in SolidWorks and 3D printed, with live 3D models and the files.">
+<Base title="3D Design & Printing" description="Parts Dylan has designed in CAD and 3D printed, with live 3D models and the files.">
   <section class="section">
     <div class="container">
-      <p class="eyebrow" data-reveal>CAD &amp; 3D prints</p>
+      <p class="eyebrow" data-reveal>3D design &amp; printing</p>
       <h1 data-reveal style="--d:1">Designed, modeled, printed</h1>
       <p class="lead muted" data-reveal style="--d:2">
         Parts I've designed in SolidWorks and brought to life on the printer. Spin the 3D models, or grab the files.
@@ -86,6 +86,9 @@ const renders = parts.filter((p) => p !== featured);
           </>
         )
       }
+      <p class="more muted" data-reveal>
+        Rockets and flight hardware live on the <a href="/aerospace/">Aerospace</a> page.
+      </p>
     </div>
   </section>
 </Base>
@@ -129,6 +132,7 @@ const renders = parts.filter((p) => p !== featured);
   dd { margin: 0; font-weight: 600; font-size: 0.95rem; }
 
   .models-head { margin-top: 64px; }
+  .more { margin-top: 48px; }
   .models-head a { font-size: 0.95rem; text-decoration: none; }
   .model { padding: 12px 12px 20px; }
   .model h3, .model p, .model .tags { padding: 0 8px; }

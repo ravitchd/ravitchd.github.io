@@ -10,7 +10,11 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 const { Content } = await render(project);
 const { title, summary, tech, repo, demo } = project.data;
-const print = (await getCollection('prints')).find((p) => p.data.project?.id === project.id);
+// A 3D model of this project, on the Aerospace or 3D design page.
+const print =
+  (await getCollection('aerospace')).find((p) => p.data.project?.id === project.id && p.data.model) ??
+  (await getCollection('prints')).find((p) => p.data.project?.id === project.id);
+const modelHref = print && `/${print.collection === 'aerospace' ? 'aerospace' : 'prints'}/${print.id}/`;
 ---
 
 <Base title={title} description={summary}>
@@ -23,7 +27,7 @@ const print = (await getCollection('prints')).find((p) => p.data.project?.id ===
       <div style="display:flex;gap:12px;margin-bottom:2rem">
         {repo && <a class="btn" href={repo}>Code</a>}
         {demo && <a class="btn primary" href={demo}>Live demo</a>}
-        {print && <a class="btn" href={`/prints/${print.id}/`}>View the 3D model</a>}
+        {modelHref && <a class="btn" href={modelHref}>View the 3D model</a>}
       </div>
       <Content />
     </div>

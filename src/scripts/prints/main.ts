@@ -23,6 +23,7 @@ function boot(canvas: HTMLCanvasElement) {
         layerHeight: Number(canvas.dataset.layerHeight) || 0.2,
         interactive: canvas.hasAttribute('data-interactive'),
         duration: canvas.hasAttribute('data-interactive') ? 4200 : 3000,
+        printIn: canvas.dataset.printIn !== 'false',
         onLevel(layer, layers) {
           if (readout) readout.textContent = `${layer} / ${layers}`;
           if (slider && document.activeElement !== slider) slider.value = String(layer / layers);
