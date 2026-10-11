@@ -4,7 +4,8 @@ import { SITE } from '../site';
 const links = [
   { href: '/resume/', label: 'Resume' },
   { href: '/projects/', label: 'Projects' },
-  { href: '/prints/', label: 'CAD' },
+  { href: '/prints/', label: '3D Design' },
+  { href: '/aerospace/', label: 'Aerospace' },
   { href: '/recipes/', label: 'Recipes' },
   { href: '/gallery/', label: 'Gallery' },
 ];
@@ -14,7 +15,11 @@ const path = Astro.url.pathname;
 <header class="site-header">
   <div class="container bar">
     <a class="brand" href="/" aria-label={SITE.name}><span class="full">{SITE.name}</span><span class="short" aria-hidden="true">{SITE.name.split(' ').map((w) => w[0]).join('')}</span></a>
-    <nav aria-label="Main">
+    <button class="menu" type="button" aria-expanded="false" aria-controls="site-nav" data-menu>
+      <span class="sr-only">Menu</span>
+      <span class="bars" aria-hidden="true"></span>
+    </button>
+    <nav id="site-nav" aria-label="Main">
       {
         links.map((l) => (
           <a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
@@ -25,6 +30,24 @@ const path = Astro.url.pathname;
     </nav>
   </div>
 </header>
+
+<script>
+  // Phones: the nav folds into a menu button.
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const button = header?.querySelector<HTMLButtonElement>('[data-menu]');
+  if (header && button) {
+    const set = (open: boolean) => {
+      header.classList.toggle('open', open);
+      button.setAttribute('aria-expanded', String(open));
+    };
+    button.addEventListener('click', () => set(!header.classList.contains('open')));
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false));
+    document.addEventListener('click', (e) => {
+      if (!header.contains(e.target as Node)) set(false);
+    });
+    window.addEventListener('scroll', () => header.classList.contains('open') && window.scrollY > 40 && set(false), { passive: true });
+  }
+</script>
 
 <style>
   header {
@@ -81,17 +104,77 @@ const path = Astro.url.pathname;
   nav a:hover::after { transform: scaleX(1); transform-origin: left; }
   nav a[aria-current='page']::after { display: none; }
   nav a[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }
-  @media (max-width: 480px) {
-    .brand { font-size: 1.1rem; }
-    .full { display: none; }
-    .short { display: inline; }
-    nav { gap: 0; }
-    nav a { padding: 0.35rem 0.45rem; font-size: 0.86rem; }
-    nav a::after { left: 0.45rem; right: 0.45rem; }
+  .menu { display: none; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
-  @media (max-width: 400px) {
-    .bar { gap: 8px; }
-    nav a { padding: 0.3rem 0.3rem; font-size: 0.78rem; }
-    nav a::after { left: 0.3rem; right: 0.3rem; }
+  nav a { white-space: nowrap; }
+  @media (max-width: 760px) {
+    nav a { padding: 0.4rem 0.6rem; font-size: 0.92rem; }
+    nav a::after { left: 0.6rem; right: 0.6rem; }
+  }
+  @media (max-width: 700px) {
+    .menu {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      margin-right: -6px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .menu:hover { background: var(--accent-soft); }
+    .bars, .bars::before, .bars::after {
+      display: block;
+      width: 18px;
+      height: 1.6px;
+      border-radius: 2px;
+      background: currentColor;
+      transition: transform 0.3s cubic-bezier(.2,.8,.2,1), opacity 0.2s ease;
+    }
+    .bars { position: relative; }
+    .bars::before, .bars::after { content: ''; position: absolute; left: 0; }
+    .bars::before { transform: translateY(-6px); }
+    .bars::after { transform: translateY(6px); }
+    header.open .bars { background: transparent; }
+    header.open .bars::before { transform: rotate(45deg); background: var(--text); }
+    header.open .bars::after { transform: rotate(-45deg); background: var(--text); }
+
+    nav {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 16px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 18px 30px -24px rgb(0 0 0 / 0.35);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.8,.2,1), visibility 0s linear 0.3s;
+    }
+    header.open nav {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.8,.2,1), visibility 0s;
+    }
+    header.open { background: var(--bg); backdrop-filter: none; }
+    nav a { padding: 0.75rem 0.9rem; font-size: 1.05rem; border-radius: 12px; }
+    nav a::after { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    nav, .bars, .bars::before, .bars::after { transition: none !important; }
   }
 </style>

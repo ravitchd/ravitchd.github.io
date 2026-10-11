@@ -92,4 +92,26 @@ const prints = defineCollection({
   }).refine((d) => d.model || d.image, { message: 'A part needs a model (.stl) or an image' }),
 });
 
-export const collections = { projects, recipes, gallery, prints };
+// Aerospace: rockets, flight hardware and electronics (ESP32 builds and the like).
+// One Markdown file per project. A `model` gets the live 3D viewer, an `image` a
+// photo, and with neither the card shows its category and tools. See _template.md.
+const aerospace = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/aerospace' }),
+  schema: ({ image }) => z.object({
+    title: z.string(),
+    summary: z.string(),
+    category: z.string().default('Aerospace'),
+    model: z.string().optional(), // path of an .stl under public/, e.g. /aerospace/nose-cone.stl
+    image: image().optional(),
+    alt: z.string().optional(),
+    tools: z.array(z.string()).default([]),
+    links: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
+    files: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
+    project: reference('projects').optional(),
+    tags: z.array(z.string()).default([]),
+    date: z.coerce.date(),
+    order: z.number().default(100),
+  }),
+});
+
+export const collections = { projects, recipes, gallery, prints, aerospace };
