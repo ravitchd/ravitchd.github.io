@@ -15,6 +15,11 @@
   --ing-herb: #5f7f3a;
   --ing-pepper: #2a1d17;
   --ing-flour: #d9c9b4;
+  /* Hero backdrop effect (flakes | steam | embers | none) and its colors */
+  --hero-fx: flakes;
+  --fx-steam: #c9b8a6;
+  --fx-ember-1: #e0552e;
+  --fx-ember-2: #ffb347;
   --radius: 14px;
   --pill: 999px;
   --max: 1040px;

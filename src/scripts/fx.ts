@@ -112,10 +112,16 @@ function initRotator() {
   }, 2800);
 }
 
-/* ---------- Ingredient scatter behind the hero ----------
-   Chili flakes, basil leaves, peppercorns and flour specks sit loosely on the
-   hero like a dusted countertop. The cursor brushes them aside, and a click
-   sprinkles a fresh pinch that falls and settles. */
+/* ---------- Hero backdrop ----------
+   The hero canvas draws one of a few kitchen-themed effects, picked by the
+   --hero-fx token so a theme can choose it:
+   - flakes: chili, basil, pepper and flour scattered like a dusted counter;
+     the cursor brushes them aside and a click sprinkles a fresh pinch
+   - steam: soft wisps rising off the bottom, bending away from the cursor
+   - embers: sparks drifting up from a wood-fired oven; a click throws a burst
+   - none: nothing drawn */
+type Fx = 'flakes' | 'steam' | 'embers' | 'none';
+
 function initField() {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-field]');
   if (!canvas) return;
@@ -129,11 +135,16 @@ function initField() {
     kind: Kind; ox: number; oy: number; x: number; y: number; vx: number; vy: number;
     a: number; va: number; size: number; life?: number;
   };
+  type Rise = { x: number; y: number; vx: number; vy: number; r: number; life: number; max: number; seed: number };
+  let mode: Fx = 'flakes';
   let bits: Bit[] = [];
   let falling: Bit[] = [];
+  let risers: Rise[] = [];
   let w = 0, h = 0;
   let mouse = { x: -9999, y: -9999 };
   let colors = ['#c42d1c', '#5f7f3a', '#2a1d17', '#d9c9b4'];
+  let steam = '#d9c9b4';
+  let ember = ['#ff7a3d', '#ffb347'];
   let visible = true;
   let raf = 0;
 
@@ -141,6 +152,14 @@ function initField() {
     const cs = getComputedStyle(document.documentElement);
     const v = (n: string, f: string) => cs.getPropertyValue(n).trim() || f;
     colors = [v('--ing-chili', v('--accent', colors[0])), v('--ing-herb', colors[1]), v('--ing-pepper', v('--text', colors[2])), v('--ing-flour', v('--border', colors[3]))];
+    steam = v('--fx-steam', v('--muted', steam));
+    ember = [v('--fx-ember-1', v('--accent', ember[0])), v('--fx-ember-2', ember[1])];
+    const m = v('--hero-fx', 'flakes').replace(/['"]/g, '') as Fx;
+    if (m !== mode) {
+      mode = m;
+      risers = [];
+      falling = [];
+    }
   };
 
   // Mostly flour and pepper, with chili and basil as the colorful accents.
@@ -202,8 +221,7 @@ function initField() {
     ctx.restore();
   };
 
-  const draw = (t: number) => {
-    ctx.clearRect(0, 0, w, h);
+  const drawFlakes = (t: number) => {
     for (const b of bits) {
       let tx = b.ox;
       let ty = b.oy;
@@ -240,12 +258,84 @@ function initField() {
     }
   };
 
+  const spawnRiser = (x = Math.random() * w, y = h + 20, burst = false): Rise => {
+    const isSteam = mode === 'steam';
+    const max = isSteam ? 260 + Math.random() * 200 : 140 + Math.random() * 160;
+    return {
+      x, y,
+      vx: burst ? (Math.random() - 0.5) * 4 : 0,
+      vy: burst ? -2 - Math.random() * 3 : isSteam ? -0.55 - Math.random() * 0.35 : -0.9 - Math.random() * 1.1,
+      r: isSteam ? 22 + Math.random() * 30 : 1 + Math.random() * 1.8,
+      life: max, max, seed: Math.random() * 1000,
+    };
+  };
+
+  const drawRisers = (t: number) => {
+    const isSteam = mode === 'steam';
+    const target = isSteam ? Math.round(w / 34) : Math.round(w / 14);
+    while (risers.length < target) {
+      const r = spawnRiser();
+      // stagger the first fill so the screen doesn't start empty
+      if (!t) r.life = Math.random() * r.max;
+      if (!t) r.y = h - (1 - r.life / r.max) * h * 1.1;
+      risers.push(r);
+    }
+    for (const p of risers) {
+      const sway = Math.sin(t * 0.0011 + p.seed) * (isSteam ? 0.35 : 0.5);
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < RADIUS * 1.2) {
+        const k = 1 - dist / (RADIUS * 1.2);
+        p.vx += (dx / (dist || 1)) * k * (isSteam ? 0.35 : 0.6);
+      }
+      p.vx = (p.vx + sway * 0.05) * 0.96;
+      p.x += p.vx + sway * 0.3;
+      p.y += p.vy;
+      p.life -= 1;
+      const age = 1 - p.life / p.max; // 0 → 1
+      if (isSteam) {
+        const rr = p.r * (0.7 + age * 1.4);
+        const a = Math.sin(Math.PI * age) * 0.3;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
+        g.addColorStop(0, steam);
+        g.addColorStop(1, 'transparent');
+        ctx.globalAlpha = a;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, rr, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const flick = 0.65 + 0.35 * Math.sin(t * 0.02 + p.seed * 7);
+        const a = Math.min(1, p.life / 50) * Math.min(1, age * 6) * flick;
+        ctx.globalAlpha = a * 0.35;
+        ctx.fillStyle = ember[0];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = ember[1];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    risers = risers.filter((p) => p.life > 0 && p.y > -60);
+  };
+
+  const draw = (t: number) => {
+    ctx.clearRect(0, 0, w, h);
+    if (mode === 'flakes') drawFlakes(t);
+    else if (mode === 'steam' || mode === 'embers') drawRisers(t);
+    ctx.globalAlpha = 1;
+  };
+
   const loop = (t: number) => {
     draw(t);
     raf = visible && !document.hidden ? requestAnimationFrame(loop) : 0;
   };
   const start = () => {
-    if (!raf && !reduceMotion) raf = requestAnimationFrame(loop);
+    if (!raf && !reduceMotion && mode !== 'none') raf = requestAnimationFrame(loop);
   };
 
   readColors();
@@ -259,6 +349,7 @@ function initField() {
   const recolor = () => {
     readColors();
     draw(performance.now());
+    start();
   };
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
   window.addEventListener('themechange', recolor);
@@ -273,21 +364,27 @@ function initField() {
     { passive: true },
   );
   document.addEventListener('pointerleave', () => (mouse = { x: -9999, y: -9999 }));
-  // Click anywhere in the hero (but not on a link or button) to sprinkle a pinch.
+  // Click anywhere in the hero (but not on a link or button): a pinch of flakes, or a burst of sparks.
   canvas.parentElement?.addEventListener('click', (e) => {
     if ((e.target as Element).closest('a, button')) return;
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
-    for (let i = 0; i < 26; i++) {
-      const b = make(x + (Math.random() - 0.5) * 18, y + (Math.random() - 0.5) * 10);
-      b.vx = (Math.random() - 0.5) * 5;
-      b.vy = -Math.random() * 3.5 - 1;
-      b.va = (Math.random() - 0.5) * 0.3;
-      b.life = 70 + Math.random() * 50;
-      falling.push(b);
+    if (mode === 'flakes') {
+      for (let i = 0; i < 26; i++) {
+        const b = make(x + (Math.random() - 0.5) * 18, y + (Math.random() - 0.5) * 10);
+        b.vx = (Math.random() - 0.5) * 5;
+        b.vy = -Math.random() * 3.5 - 1;
+        b.va = (Math.random() - 0.5) * 0.3;
+        b.life = 70 + Math.random() * 50;
+        falling.push(b);
+      }
+      if (falling.length > 400) falling.splice(0, falling.length - 400);
+    } else if (mode === 'embers') {
+      for (let i = 0; i < 24; i++) risers.push(spawnRiser(x, y, true));
+    } else if (mode === 'steam') {
+      for (let i = 0; i < 5; i++) risers.push(spawnRiser(x + (Math.random() - 0.5) * 40, y, false));
     }
-    if (falling.length > 400) falling.splice(0, falling.length - 400);
     start();
   });
   new IntersectionObserver(([e]) => {
