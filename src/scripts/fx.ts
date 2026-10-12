@@ -112,28 +112,46 @@ function initRotator() {
   }, 2800);
 }
 
-/* ---------- Interactive dot field behind the hero ---------- */
+/* ---------- Ingredient scatter behind the hero ----------
+   Chili flakes, basil leaves, peppercorns and flour specks sit loosely on the
+   hero like a dusted countertop. The cursor brushes them aside, and a click
+   sprinkles a fresh pinch that falls and settles. */
 function initField() {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-field]');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const GAP = 26;
-  const RADIUS = 150;
-  type Dot = { ox: number; oy: number; x: number; y: number; vx: number; vy: number };
-  let dots: Dot[] = [];
+  const GAP = 46;
+  const RADIUS = 140;
+  type Kind = 0 | 1 | 2 | 3; // chili, basil, pepper, flour
+  type Bit = {
+    kind: Kind; ox: number; oy: number; x: number; y: number; vx: number; vy: number;
+    a: number; va: number; size: number; life?: number;
+  };
+  let bits: Bit[] = [];
+  let falling: Bit[] = [];
   let w = 0, h = 0;
   let mouse = { x: -9999, y: -9999 };
-  let accent = '#ef4b32', ink = '#f4ece1';
+  let colors = ['#c42d1c', '#5f7f3a', '#2a1d17', '#d9c9b4'];
   let visible = true;
   let raf = 0;
 
   const readColors = () => {
     const cs = getComputedStyle(document.documentElement);
-    accent = cs.getPropertyValue('--accent').trim() || accent;
-    ink = cs.getPropertyValue('--text').trim() || ink;
+    const v = (n: string, f: string) => cs.getPropertyValue(n).trim() || f;
+    colors = [v('--ing-chili', v('--accent', colors[0])), v('--ing-herb', colors[1]), v('--ing-pepper', v('--text', colors[2])), v('--ing-flour', v('--border', colors[3]))];
   };
+
+  // Mostly flour and pepper, with chili and basil as the colorful accents.
+  const pickKind = (): Kind => {
+    const r = Math.random();
+    return (r < 0.22 ? 0 : r < 0.36 ? 1 : r < 0.62 ? 2 : 3) as Kind;
+  };
+  const sizeFor = (k: Kind) => (k === 0 ? 3.8 : k === 1 ? 5.2 : k === 2 ? 1.8 : 1.5) * (0.8 + Math.random() * 0.5);
+  const make = (x: number, y: number, kind = pickKind()): Bit => ({
+    kind, ox: x, oy: y, x, y, vx: 0, vy: 0, a: Math.random() * Math.PI * 2, va: 0, size: sizeFor(kind),
+  });
 
   const resize = () => {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -143,41 +161,83 @@ function initField() {
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dots = [];
+    bits = [];
     for (let y = GAP / 2; y < h; y += GAP)
-      for (let x = GAP / 2; x < w; x += GAP) dots.push({ ox: x, oy: y, x, y, vx: 0, vy: 0 });
+      for (let x = GAP / 2; x < w; x += GAP)
+        bits.push(make(x + (Math.random() - 0.5) * GAP * 0.8, y + (Math.random() - 0.5) * GAP * 0.8));
+  };
+
+  const shape = (b: Bit, alpha: number) => {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.a);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = colors[b.kind];
+    const s = b.size;
+    ctx.beginPath();
+    if (b.kind === 0) {
+      // chili flake: a ragged little sliver
+      ctx.moveTo(-s, -s * 0.35);
+      ctx.lineTo(s * 0.9, -s * 0.5);
+      ctx.lineTo(s * 0.6, s * 0.45);
+      ctx.lineTo(-s * 0.8, s * 0.3);
+    } else if (b.kind === 1) {
+      // basil leaf: two arcs meeting at the tips, with a pale midrib
+      ctx.moveTo(-s, 0);
+      ctx.quadraticCurveTo(0, -s * 0.85, s, 0);
+      ctx.quadraticCurveTo(0, s * 0.85, -s, 0);
+    } else {
+      ctx.ellipse(0, 0, s, b.kind === 3 ? s * 0.7 : s, 0, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    if (b.kind === 1) {
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.strokeStyle = colors[3];
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.8, 0);
+      ctx.lineTo(s * 0.8, 0);
+      ctx.stroke();
+    }
+    ctx.restore();
   };
 
   const draw = (t: number) => {
     ctx.clearRect(0, 0, w, h);
-    for (const d of dots) {
-      let tx = d.ox;
-      let ty = d.oy;
-      if (!reduceMotion) ty += Math.sin(d.ox * 0.011 + t * 0.0009) * Math.cos(d.oy * 0.013 + t * 0.0007) * 5;
-
-      const dx = d.x - mouse.x;
-      const dy = d.y - mouse.y;
+    for (const b of bits) {
+      let tx = b.ox;
+      let ty = b.oy;
+      if (!reduceMotion) ty += Math.sin(b.ox * 0.011 + t * 0.0006) * 2.5;
+      const dx = b.x - mouse.x;
+      const dy = b.y - mouse.y;
       const dist = Math.hypot(dx, dy);
       let k = 0;
       if (dist < RADIUS) {
         k = 1 - dist / RADIUS;
-        const f = k * k * 42;
+        const f = k * k * 46;
         tx += (dx / (dist || 1)) * f;
         ty += (dy / (dist || 1)) * f;
+        b.va += (dx > 0 ? 1 : -1) * k * 0.02;
       }
-      d.vx = (d.vx + (tx - d.x) * 0.09) * 0.8;
-      d.vy = (d.vy + (ty - d.y) * 0.09) * 0.8;
-      d.x += d.vx;
-      d.y += d.vy;
-
-      ctx.globalAlpha = 0.16 + k * 0.75;
-      ctx.fillStyle = k > 0.05 ? accent : ink;
-      const s = 1.3 + k * 2.4;
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, s, 0, Math.PI * 2);
-      ctx.fill();
+      b.vx = (b.vx + (tx - b.x) * 0.08) * 0.8;
+      b.vy = (b.vy + (ty - b.y) * 0.08) * 0.8;
+      b.x += b.vx;
+      b.y += b.vy;
+      b.va *= 0.92;
+      b.a += b.va;
+      shape(b, (b.kind === 3 ? 0.6 : b.kind === 2 ? 0.35 : 0.62) + k * 0.35);
     }
-    ctx.globalAlpha = 1;
+    // a fresh pinch: falls, tumbles, fades
+    falling = falling.filter((b) => (b.life ?? 0) > 0);
+    for (const b of falling) {
+      b.vy += 0.12;
+      b.vx *= 0.985;
+      b.x += b.vx;
+      b.y += b.vy;
+      b.a += b.va;
+      b.life = (b.life ?? 0) - 1;
+      shape(b, Math.min(1, (b.life ?? 0) / 40) * 0.9);
+    }
   };
 
   const loop = (t: number) => {
@@ -213,6 +273,23 @@ function initField() {
     { passive: true },
   );
   document.addEventListener('pointerleave', () => (mouse = { x: -9999, y: -9999 }));
+  // Click anywhere in the hero (but not on a link or button) to sprinkle a pinch.
+  canvas.parentElement?.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a, button')) return;
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    for (let i = 0; i < 26; i++) {
+      const b = make(x + (Math.random() - 0.5) * 18, y + (Math.random() - 0.5) * 10);
+      b.vx = (Math.random() - 0.5) * 5;
+      b.vy = -Math.random() * 3.5 - 1;
+      b.va = (Math.random() - 0.5) * 0.3;
+      b.life = 70 + Math.random() * 50;
+      falling.push(b);
+    }
+    if (falling.length > 400) falling.splice(0, falling.length - 400);
+    start();
+  });
   new IntersectionObserver(([e]) => {
     visible = e.isIntersecting;
     if (visible) start();
@@ -225,7 +302,7 @@ function initField() {
 function hello() {
   console.log(
     '%cHey there 👋%c\nIf you are poking around in here, we would probably get along.\nSource: https://github.com/ravitchd/ravitchd.github.io',
-    'font: 700 18px system-ui, sans-serif; color: #ef4b32',
+    'font: 700 18px system-ui, sans-serif; color: #c42d1c',
     'font: 13px system-ui; color: inherit',
   );
 }

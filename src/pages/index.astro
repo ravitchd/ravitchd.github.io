@@ -195,6 +195,23 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     color: var(--accent);
     transition: opacity 0.38s ease, transform 0.38s cubic-bezier(.2,.8,.2,1), filter 0.38s ease;
   }
+  /* A swipe of sauce under the phrase, brushed on each time it changes */
+  .rotator { position: relative; }
+  .rotator::after {
+    content: '';
+    position: absolute;
+    left: -2%;
+    right: -2%;
+    bottom: -0.32em;
+    height: 0.42em;
+    background: var(--accent);
+    opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M3 10C40 4 92 5 132 7s52 3 65-2' fill='none' stroke='%23000' stroke-width='5.5' stroke-linecap='round'/%3E%3Cpath d='M12 12c40-4 90-3 140-2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M3 10C40 4 92 5 132 7s52 3 65-2' fill='none' stroke='%23000' stroke-width='5.5' stroke-linecap='round'/%3E%3Cpath d='M12 12c40-4 90-3 140-2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 0.7s cubic-bezier(.7,0,.2,1) 0.15s;
+  }
+  .rotator:global(.in)::after { clip-path: inset(0 100% 0 0); transition: none; }
   .rotator:global(.out) { opacity: 0; transform: translateY(-0.4em); filter: blur(6px); }
   .rotator:global(.in) { opacity: 0; transform: translateY(0.4em); filter: blur(6px); transition: none; }
   .sub { color: var(--muted); max-width: 44ch; font-size: 1.05rem; }
@@ -261,8 +278,8 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     .pulse, .scroll-cue span { animation: none; }
   }
   @keyframes unveil {
-    from { clip-path: inset(100% 0 0 0); scale: 1.12; }
-    to { clip-path: inset(0 0 0 0); scale: 1; }
+    from { clip-path: inset(100% 0 0 0 round var(--radius)); scale: 1.12; }
+    to { clip-path: inset(0 0 0 0 round var(--radius)); scale: 1; }
   }
   @keyframes chip-in { from { opacity: 0; translate: -12px 0; } to { opacity: 1; translate: 0 0; } }
   @keyframes slide-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
@@ -282,6 +299,7 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
   .portrait :global(img) {
     filter: var(--portrait-filter, none);
     transition: filter 0.6s ease;
+    border-radius: var(--radius);
     position: relative;
     z-index: 1;
     display: block;
@@ -295,6 +313,7 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     inset: 0;
     translate: 18px 18px;
     background: var(--accent);
+    border-radius: var(--radius);
   }
   .chip {
     position: absolute;
@@ -327,7 +346,7 @@ const words = greeting.split(' ').map((w) => [...w].map((ch) => ({ ch, i: n++ })
     align-items: center;
     gap: 20px;
     padding: 18px 0 4px;
-    border-top: 2px solid var(--text);
+    border-top: 1px solid var(--border);
   }
   .stats strong {
     font-family: var(--display);

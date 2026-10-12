@@ -1,23 +1,28 @@
 :root {
-  /* Wood-fired: warm charcoal, tomato red and cream. */
-  --bg: #15110e;
-  --surface: #1e1915;
-  --text: #f4ece1;
-  --muted: #a89c8e;
-  --border: #2e2721;
-  --accent: #ef4b32;
-  --on-accent: #15110e;
-  --accent-soft: #2c1610;
-  --glow-1: #7a2410;
-  --glow-2: #3a2412;
-  --radius: 6px;
-  --pill: 6px;
+  /* Marinara: cream paper, sauce red and espresso ink. */
+  --bg: #fbf6ee;
+  --surface: #fffdf9;
+  --text: #2a1d17;
+  --muted: #74655b;
+  --border: #ecdfd0;
+  --accent: #c42d1c;
+  --on-accent: #ffffff;
+  --accent-soft: #f8e2da;
+  --glow-1: #f6c9b8;
+  --glow-2: #f3e3c7;
+  /* Hero ingredient scatter: chili, basil, pepper, flour */
+  --ing-chili: #c42d1c;
+  --ing-herb: #5f7f3a;
+  --ing-pepper: #2a1d17;
+  --ing-flour: #d9c9b4;
+  --radius: 14px;
+  --pill: 999px;
   --max: 1040px;
-  --display: 'Bricolage Grotesque', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Young Serif', Georgia, serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --heading-weight: 700;
-  --heading-tracking: -0.03em;
-  color-scheme: dark;
+  --heading-weight: 400;
+  --heading-tracking: -0.015em;
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -124,8 +129,8 @@ img { max-width: 100%; height: auto; }
 a.card { box-shadow: inset 0 3px 0 transparent; }
 a.card:hover {
   transform: translateY(-3px);
-  border-color: var(--text);
-  box-shadow: inset 0 3px 0 var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: inset 0 3px 0 var(--accent), 0 14px 30px -20px rgb(42 29 23 / 0.35);
 }
 .card h3 { margin: 0; }
 .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
@@ -134,7 +139,7 @@ a.card:hover {
 .section { padding: 56px 0; }
 .section-head {
   padding-top: 14px;
-  border-top: 2px solid var(--text);
+  border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
