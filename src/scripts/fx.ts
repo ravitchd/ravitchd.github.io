@@ -79,29 +79,6 @@ function initCursor() {
   tick();
 }
 
-/* ---------- Card spotlight + tilt ---------- */
-function initCards() {
-  if (!finePointer) return;
-  document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
-    card.addEventListener('pointermove', (e) => {
-      const r = card.getBoundingClientRect();
-      const px = e.clientX - r.left;
-      const py = e.clientY - r.top;
-      card.style.setProperty('--mx', `${px}px`);
-      card.style.setProperty('--my', `${py}px`);
-      if (reduceMotion || card.tagName !== 'A') return;
-      const rx = (py / r.height - 0.5) * -6;
-      const ry = (px / r.width - 0.5) * 6;
-      card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
-    });
-    card.addEventListener('pointerleave', () => {
-      card.style.transform = '';
-      card.style.removeProperty('--mx');
-      card.style.removeProperty('--my');
-    });
-  });
-}
-
 /* ---------- Magnetic buttons ---------- */
 function initMagnetic() {
   if (!finePointer || reduceMotion) return;
@@ -148,7 +125,7 @@ function initField() {
   let dots: Dot[] = [];
   let w = 0, h = 0;
   let mouse = { x: -9999, y: -9999 };
-  let accent = '#2f5d50', ink = '#1c1b19';
+  let accent = '#d71a1a', ink = '#0a0a0a';
   let visible = true;
   let raf = 0;
 
@@ -248,7 +225,7 @@ function initField() {
 function hello() {
   console.log(
     '%cHey there 👋%c\nIf you are poking around in here, we would probably get along.\nSource: https://github.com/ravitchd/ravitchd.github.io',
-    'font: 600 18px Georgia, serif; color: #2f5d50',
+    'font: 700 18px system-ui, sans-serif; color: #d71a1a',
     'font: 13px system-ui; color: inherit',
   );
 }
@@ -256,7 +233,6 @@ function hello() {
 initReveal();
 initHeader();
 initCursor();
-initCards();
 initMagnetic();
 initRotator();
 initField();

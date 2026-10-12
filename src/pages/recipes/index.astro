@@ -243,12 +243,12 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     margin: 0 0 28px;
   }
   .title em {
-    font-style: italic;
+    font-style: normal;
     color: var(--accent);
   }
   .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 40px; }
   .stats div { display: flex; flex-direction: column; }
-  .stats strong { font-family: var(--serif); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stats strong { font-family: var(--display); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
   .stats span { color: var(--muted); font-size: 0.9rem; }
   .surprise { font-size: 1rem; padding: 0.8rem 1.4rem; }
   .surprise:disabled { cursor: progress; }
@@ -267,7 +267,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   .reel[hidden] { display: none; }
   .reel-label { color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
   .reel-name {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: clamp(1.5rem, 4vw, 2.2rem);
     font-weight: 600;
     text-decoration: none;
@@ -294,7 +294,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   .marquee:hover .track { animation-play-state: paused; }
   .run { display: flex; }
   .dish {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: clamp(1.4rem, 3.2vw, 2.1rem);
     white-space: nowrap;
     padding-right: 0.6em;
@@ -321,7 +321,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     flex: 1 1 220px;
     max-width: 360px;
     padding: 0.6rem 1rem;
-    border-radius: 999px;
+    border-radius: var(--pill);
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);
@@ -331,7 +331,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     padding: 0.35rem 0.85rem;
-    border-radius: 999px;
+    border-radius: var(--pill);
     border: 1px solid var(--border);
     color: var(--muted);
     font-size: 0.88rem;
@@ -355,7 +355,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   }
   .course-head h2 { margin: 0; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; }
   .num {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: clamp(2rem, 5vw, 3.2rem);
     font-weight: 600;
     line-height: 1;
@@ -399,7 +399,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     color: inherit;
     text-decoration: none;
   }
-  .board .name { font-family: var(--serif); font-size: 1.02rem; }
+  .board .name { font-family: var(--display); font-size: 1.02rem; }
   .dots { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--border); transform: translateY(-4px); }
   .state { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   .state.ready { color: var(--accent); font-weight: 600; }

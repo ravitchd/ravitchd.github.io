@@ -144,9 +144,9 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   scene.add(nozzle);
 
   const applyColors = () => {
-    const accent = cssColor('--accent', '#2f5d50');
-    const text = cssColor('--text', '#1c1b19');
-    const bg = cssColor('--bg', '#fbfaf7');
+    const accent = cssColor('--accent', '#d71a1a');
+    const text = cssColor('--text', '#0a0a0a');
+    const bg = cssColor('--bg', '#ffffff');
     material.color.copy(accent).lerp(new THREE.Color(0xffffff), 0.12);
     capMaterial.color.set(0xff8a3d);
     tipMaterial.color.set(0xffb070);

@@ -70,7 +70,7 @@ const path = Astro.url.pathname;
     height: 64px;
   }
   .brand {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-weight: 600;
     font-size: 1.15rem;
     color: var(--text);
@@ -81,7 +81,7 @@ const path = Astro.url.pathname;
   nav { display: flex; gap: 4px; }
   nav a {
     padding: 0.4rem 0.75rem;
-    border-radius: 999px;
+    border-radius: var(--pill);
     color: var(--muted);
     text-decoration: none;
     font-size: 0.95rem;
@@ -126,7 +126,7 @@ const path = Astro.url.pathname;
       height: 42px;
       margin-right: -6px;
       border: 0;
-      border-radius: 999px;
+      border-radius: var(--pill);
       background: transparent;
       color: var(--text);
       cursor: pointer;
@@ -171,7 +171,7 @@ const path = Astro.url.pathname;
       transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.8,.2,1), visibility 0s;
     }
     header.open { background: var(--bg); backdrop-filter: none; }
-    nav a { padding: 0.75rem 0.9rem; font-size: 1.05rem; border-radius: 12px; }
+    nav a { padding: 0.75rem 0.9rem; font-size: 1.05rem; border-radius: var(--radius); }
     nav a::after { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {

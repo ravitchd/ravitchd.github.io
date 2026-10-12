@@ -1,30 +1,23 @@
 :root {
-  --bg: #fbfaf7;
-  --surface: #ffffff;
-  --text: #1c1b19;
-  --muted: #6b675f;
-  --border: #e7e3da;
-  --accent: #2f5d50;
-  --accent-soft: #e6efe9;
-  --glow-1: #d9a441;
-  --glow-2: #7aa6c2;
-  --radius: 14px;
+  /* Black, bone white and one crimson; square corners throughout. Always dark. */
+  --bg: #070707;
+  --surface: #0f0f0f;
+  --text: #ececea;
+  --muted: #8d8d8a;
+  --border: #1e1e1e;
+  --accent: #f0232b;
+  --accent-soft: #1f0708;
+  --glow-1: #8a0b10;
+  --glow-2: #2a0305;
+  --radius: 0px;
+  --pill: 0px;
   --max: 1040px;
-  --serif: 'Fraunces', Georgia, serif;
+  --display: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121311;
-    --surface: #1a1c19;
-    --text: #ecebe6;
-    --muted: #a19d93;
-    --border: #2b2e2a;
-    --accent: #8cc2ad;
-    --accent-soft: #1f2a25;
-  }
+  --heading-weight: 800;
+  --heading-tracking: -0.04em;
+  --portrait-filter: grayscale(1) contrast(1.12);
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -42,7 +35,7 @@ body {
 }
 
 h1, h2, h3 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: var(--heading-weight, 600);
   line-height: 1.15;
   letter-spacing: var(--heading-tracking, -0.01em);
@@ -83,7 +76,7 @@ img { max-width: 100%; height: auto; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 1.2rem;
-  border-radius: 999px;
+  border-radius: var(--pill);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -93,17 +86,20 @@ img { max-width: 100%; height: auto; }
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 .btn { transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.15s ease, background 0.15s ease; will-change: transform; }
-.btn:hover { border-color: var(--accent); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.btn:hover { border-color: var(--text); background: var(--text); color: var(--bg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+.btn.primary:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
 
 .tag {
   display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--pill);
+  border: 1px solid currentColor;
   color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .grid {
@@ -122,15 +118,14 @@ img { max-width: 100%; height: auto; }
   border-radius: var(--radius);
   color: inherit;
   text-decoration: none;
-  background:
-    radial-gradient(420px circle at var(--mx, -600px) var(--my, -600px), color-mix(in srgb, var(--accent) 13%, transparent), transparent 45%),
-    var(--surface);
   transition: transform 0.2s cubic-bezier(.2,.8,.2,1), border-color 0.2s ease, box-shadow 0.2s ease;
   transform-style: preserve-3d;
 }
+a.card { box-shadow: inset 0 3px 0 transparent; }
 a.card:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+  border-color: var(--text);
+  box-shadow: inset 0 3px 0 var(--accent);
 }
 .card h3 { margin: 0; }
 .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
@@ -138,6 +133,8 @@ a.card:hover {
 
 .section { padding: 56px 0; }
 .section-head {
+  padding-top: 14px;
+  border-top: 2px solid var(--text);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -152,7 +149,7 @@ a.card:hover {
 .prose ul, .prose ol { padding-left: 1.3em; }
 .prose li { margin-bottom: 0.35em; }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* ---------- Motion and craft ---------- */
 
@@ -160,17 +157,6 @@ a.card:hover {
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
-}
-
-/* Film grain over everything, very subtle */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 200;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* Scroll progress bar, driven purely by CSS where supported */
@@ -252,7 +238,7 @@ body::after {
   top: -60px;
   z-index: 400;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--accent);
   color: var(--bg);
 }

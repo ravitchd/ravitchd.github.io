@@ -390,7 +390,7 @@ const facts = [
     position: relative;
     display: inline-flex;
     padding: 4px;
-    border-radius: 999px;
+    border-radius: var(--pill);
     background: var(--surface);
     border: 1px solid var(--border);
   }
@@ -399,7 +399,7 @@ const facts = [
     z-index: 1;
     padding: 0.42rem 0.95rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--pill);
     background: none;
     color: var(--muted);
     font: inherit;
@@ -414,7 +414,7 @@ const facts = [
     top: 4px;
     bottom: 4px;
     left: 4px;
-    border-radius: 999px;
+    border-radius: var(--pill);
     background: var(--accent);
   }
   .seg.ready .thumb { transition: transform 0.4s cubic-bezier(.3,1.4,.5,1), width 0.3s ease; }
@@ -468,7 +468,7 @@ const facts = [
     width: 1.1em;
     height: 1.1em;
     border: 1.5px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius);
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.25s cubic-bezier(.3,1.6,.5,1);
   }
   li.check:hover::before { border-color: var(--accent); }
@@ -492,12 +492,12 @@ const facts = [
     padding: 18px 12px 18px 0;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: var(--radius);
     transition: background 0.25s ease, opacity 0.3s ease;
   }
   .steps li::before {
     content: counter(step, decimal-leading-zero);
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: 2rem;
     font-weight: 600;
     line-height: 1;
@@ -539,7 +539,7 @@ const facts = [
   @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
   :global(html.cooking) { overflow: hidden; }
   .focus-top { display: flex; align-items: center; gap: 16px; }
-  .focus-title { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; }
+  .focus-title { font-family: var(--display); font-weight: 600; font-size: 1.1rem; }
   .focus-count { color: var(--muted); font-size: 0.9rem; margin-left: auto; font-variant-numeric: tabular-nums; }
   .x {
     width: 40px;
@@ -555,14 +555,14 @@ const facts = [
   .focus-bar span { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
   .focus-body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 900px; width: 100%; margin: 0 auto; }
   .focus-num {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: clamp(4rem, 14vw, 9rem);
     font-weight: 600;
     line-height: 1;
     color: transparent;
     -webkit-text-stroke: 2px var(--accent);
   }
-  .focus-text { font-family: var(--serif); font-size: clamp(1.6rem, 4.2vw, 2.8rem); line-height: 1.25; margin: 12px 0 0; }
+  .focus-text { font-family: var(--display); font-size: clamp(1.6rem, 4.2vw, 2.8rem); line-height: 1.25; margin: 12px 0 0; }
   .focus-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .focus-nav .btn { font-size: 1.05rem; padding: 0.85rem 1.5rem; }
   .focus-nav .btn:disabled { opacity: 0.4; }
