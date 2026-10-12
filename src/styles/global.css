@@ -1,22 +1,22 @@
 :root {
-  /* Black, bone white and one crimson; square corners throughout. Always dark. */
-  --bg: #070707;
-  --surface: #0f0f0f;
-  --text: #ececea;
-  --muted: #8d8d8a;
-  --border: #1e1e1e;
-  --accent: #f0232b;
-  --accent-soft: #1f0708;
-  --glow-1: #8a0b10;
-  --glow-2: #2a0305;
-  --radius: 0px;
-  --pill: 0px;
+  /* Wood-fired: warm charcoal, tomato red and cream. */
+  --bg: #15110e;
+  --surface: #1e1915;
+  --text: #f4ece1;
+  --muted: #a89c8e;
+  --border: #2e2721;
+  --accent: #ef4b32;
+  --on-accent: #15110e;
+  --accent-soft: #2c1610;
+  --glow-1: #7a2410;
+  --glow-2: #3a2412;
+  --radius: 6px;
+  --pill: 6px;
   --max: 1040px;
-  --display: 'Inter Tight', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Bricolage Grotesque', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --heading-weight: 800;
-  --heading-tracking: -0.04em;
-  --portrait-filter: grayscale(1) contrast(1.12);
+  --heading-weight: 700;
+  --heading-tracking: -0.03em;
   color-scheme: dark;
 }
 
@@ -87,7 +87,7 @@ img { max-width: 100%; height: auto; }
 }
 .btn { transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.15s ease, background 0.15s ease; will-change: transform; }
 .btn:hover { border-color: var(--text); background: var(--text); color: var(--bg); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .btn.primary:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
 
 .tag {

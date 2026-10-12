@@ -125,7 +125,7 @@ function initField() {
   let dots: Dot[] = [];
   let w = 0, h = 0;
   let mouse = { x: -9999, y: -9999 };
-  let accent = '#d71a1a', ink = '#0a0a0a';
+  let accent = '#ef4b32', ink = '#f4ece1';
   let visible = true;
   let raf = 0;
 
@@ -225,7 +225,7 @@ function initField() {
 function hello() {
   console.log(
     '%cHey there 👋%c\nIf you are poking around in here, we would probably get along.\nSource: https://github.com/ravitchd/ravitchd.github.io',
-    'font: 700 18px system-ui, sans-serif; color: #d71a1a',
+    'font: 700 18px system-ui, sans-serif; color: #ef4b32',
     'font: 13px system-ui; color: inherit',
   );
 }
