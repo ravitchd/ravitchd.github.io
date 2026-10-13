@@ -43,6 +43,7 @@ const line = summary(recipe);
     transform: translate(-8px, -6px) rotate(-6deg);
     -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
+  :global(html:not([data-look='spec'])) .initial { display: none; }
   .kind { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
   h3, p, small, .tags { position: relative; }
   @media (prefers-reduced-motion: reduce) { .initial { transition: none; } }
