@@ -115,12 +115,15 @@ function initRotator() {
 /* ---------- Hero backdrop ----------
    The hero canvas draws one of a few kitchen-themed effects, picked by the
    --hero-fx token so a theme can choose it:
+   - mesh: a springy grid, like stretched dough or an FEA mesh; drag the cursor
+     through it to pull it around, click to poke a ripple, and strained cells
+     glow in the accent color
    - flakes: chili, basil, pepper and flour scattered like a dusted counter;
      the cursor brushes them aside and a click sprinkles a fresh pinch
    - steam: soft wisps rising off the bottom, bending away from the cursor
    - embers: sparks drifting up from a wood-fired oven; a click throws a burst
    - none: nothing drawn */
-type Fx = 'flakes' | 'steam' | 'embers' | 'none';
+type Fx = 'mesh' | 'flakes' | 'steam' | 'embers' | 'none';
 
 function initField() {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-field]');
@@ -136,12 +139,18 @@ function initField() {
     a: number; va: number; size: number; life?: number;
   };
   type Rise = { x: number; y: number; vx: number; vy: number; r: number; life: number; max: number; seed: number };
-  let mode: Fx = 'flakes';
+  let mode: Fx = 'mesh';
   let bits: Bit[] = [];
   let falling: Bit[] = [];
   let risers: Rise[] = [];
   let w = 0, h = 0;
   let mouse = { x: -9999, y: -9999 };
+  let mvx = 0, mvy = 0; // cursor velocity, decays each frame
+  // mesh nodes: rest grid + displacement and velocity, stored flat
+  const CELL = 34;
+  let cols = 0, rows = 0;
+  let mx: Float32Array = new Float32Array(0), my = mx, mvxs = mx, mvys = mx;
+  let ink = '#2a1d17', hot = '#c42d1c';
   let colors = ['#c42d1c', '#5f7f3a', '#2a1d17', '#d9c9b4'];
   let steam = '#d9c9b4';
   let ember = ['#ff7a3d', '#ffb347'];
@@ -153,8 +162,10 @@ function initField() {
     const v = (n: string, f: string) => cs.getPropertyValue(n).trim() || f;
     colors = [v('--ing-chili', v('--accent', colors[0])), v('--ing-herb', colors[1]), v('--ing-pepper', v('--text', colors[2])), v('--ing-flour', v('--border', colors[3]))];
     steam = v('--fx-steam', v('--muted', steam));
+    ink = v('--text', ink);
+    hot = v('--accent', hot);
     ember = [v('--fx-ember-1', v('--accent', ember[0])), v('--fx-ember-2', ember[1])];
-    const m = v('--hero-fx', 'flakes').replace(/['"]/g, '') as Fx;
+    const m = v('--hero-fx', 'mesh').replace(/['"]/g, '') as Fx;
     if (m !== mode) {
       mode = m;
       risers = [];
@@ -180,6 +191,12 @@ function initField() {
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(w / CELL) + 2;
+    rows = Math.ceil(h / CELL) + 2;
+    mx = new Float32Array(cols * rows);
+    my = new Float32Array(cols * rows);
+    mvxs = new Float32Array(cols * rows);
+    mvys = new Float32Array(cols * rows);
     bits = [];
     for (let y = GAP / 2; y < h; y += GAP)
       for (let x = GAP / 2; x < w; x += GAP)
@@ -258,6 +275,91 @@ function initField() {
     }
   };
 
+  const stepMesh = () => {
+    const R = RADIUS * 1.1;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const n = j * cols + i;
+        const px = (i - 1) * CELL + mx[n];
+        const py = (j - 1) * CELL + my[n];
+        // neighbours pull toward their average, so a dent spreads as a ripple
+        let ax = 0, ay = 0, c = 0;
+        if (i > 0) { ax += mx[n - 1]; ay += my[n - 1]; c++; }
+        if (i < cols - 1) { ax += mx[n + 1]; ay += my[n + 1]; c++; }
+        if (j > 0) { ax += mx[n - cols]; ay += my[n - cols]; c++; }
+        if (j < rows - 1) { ax += mx[n + cols]; ay += my[n + cols]; c++; }
+        let fx = (ax / c - mx[n]) * 0.22 - mx[n] * 0.035;
+        let fy = (ay / c - my[n]) * 0.22 - my[n] * 0.035;
+        const dx = px - mouse.x;
+        const dy = py - mouse.y;
+        const d = Math.hypot(dx, dy);
+        if (d < R) {
+          const k = 1 - d / R;
+          // drag the dough along with the cursor, plus a gentle press outward
+          fx += mvx * k * k * 0.32 + (dx / (d || 1)) * k * 0.5;
+          fy += mvy * k * k * 0.32 + (dy / (d || 1)) * k * 0.5;
+        }
+        mvxs[n] = (mvxs[n] + fx) * 0.9;
+        mvys[n] = (mvys[n] + fy) * 0.9;
+      }
+    }
+    for (let n = 0; n < mx.length; n++) {
+      mx[n] += mvxs[n];
+      my[n] += mvys[n];
+    }
+    mvx *= 0.85;
+    mvy *= 0.85;
+  };
+
+  const drawMesh = () => {
+    if (!reduceMotion) stepMesh();
+    const P = (i: number, j: number): [number, number] => {
+      const n = j * cols + i;
+      return [(i - 1) * CELL + mx[n], (j - 1) * CELL + my[n]];
+    };
+    // base grid, faint
+    ctx.globalAlpha = 0.11;
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const [x, y] = P(i, j);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    }
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const [x, y] = P(i, j);
+        if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+    // strained edges light up in the accent, like a stress plot
+    ctx.strokeStyle = hot;
+    ctx.lineWidth = 1.5;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const n = j * cols + i;
+        const s = Math.hypot(mx[n], my[n]);
+        if (s < 1.5) continue;
+        const a = Math.min(0.85, s / 26);
+        ctx.globalAlpha = a;
+        const [x, y] = P(i, j);
+        ctx.beginPath();
+        if (i < cols - 1) { const [x2, y2] = P(i + 1, j); ctx.moveTo(x, y); ctx.lineTo(x2, y2); }
+        if (j < rows - 1) { const [x3, y3] = P(i, j + 1); ctx.moveTo(x, y); ctx.lineTo(x3, y3); }
+        ctx.stroke();
+        if (s > 6) {
+          ctx.fillStyle = hot;
+          ctx.beginPath();
+          ctx.arc(x, y, 1.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  };
+
   const spawnRiser = (x = Math.random() * w, y = h + 20, burst = false): Rise => {
     const isSteam = mode === 'steam';
     const max = isSteam ? 260 + Math.random() * 200 : 140 + Math.random() * 160;
@@ -325,7 +427,8 @@ function initField() {
 
   const draw = (t: number) => {
     ctx.clearRect(0, 0, w, h);
-    if (mode === 'flakes') drawFlakes(t);
+    if (mode === 'mesh') drawMesh();
+    else if (mode === 'flakes') drawFlakes(t);
     else if (mode === 'steam' || mode === 'embers') drawRisers(t);
     ctx.globalAlpha = 1;
   };
@@ -359,7 +462,13 @@ function initField() {
     'pointermove',
     (e) => {
       const r = canvas.getBoundingClientRect();
-      mouse = { x: e.clientX - r.left, y: e.clientY - r.top };
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      if (mouse.x > -9000) {
+        mvx = Math.max(-40, Math.min(40, x - mouse.x));
+        mvy = Math.max(-40, Math.min(40, y - mouse.y));
+      }
+      mouse = { x, y };
     },
     { passive: true },
   );
@@ -370,7 +479,22 @@ function initField() {
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
-    if (mode === 'flakes') {
+    if (mode === 'mesh') {
+      // poke: shove nearby nodes outward and let the ripple travel
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          const n = j * cols + i;
+          const dx = (i - 1) * CELL + mx[n] - x;
+          const dy = (j - 1) * CELL + my[n] - y;
+          const d = Math.hypot(dx, dy);
+          if (d < 120) {
+            const k = 1 - d / 120;
+            mvxs[n] += (dx / (d || 1)) * k * 14;
+            mvys[n] += (dy / (d || 1)) * k * 14;
+          }
+        }
+      }
+    } else if (mode === 'flakes') {
       for (let i = 0; i < 26; i++) {
         const b = make(x + (Math.random() - 0.5) * 18, y + (Math.random() - 0.5) * 10);
         b.vx = (Math.random() - 0.5) * 5;
