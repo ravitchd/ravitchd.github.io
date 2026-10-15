@@ -92,14 +92,15 @@ const path = Astro.url.pathname;
     left: 0.7rem;
     right: 0.7rem;
     bottom: 0.2rem;
-    height: 3px;
-    background: var(--marker);
+    height: 1.5px;
+    background: currentColor;
     transform: scaleX(0);
     transform-origin: right;
     transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
   }
   nav a:hover { color: var(--accent); }
   nav a:hover::after, nav a[aria-current='page']::after { transform: scaleX(1); transform-origin: left; }
+  nav a[aria-current='page'] { color: var(--accent); }
   .menu { display: none; }
   .sr-only {
     position: absolute;

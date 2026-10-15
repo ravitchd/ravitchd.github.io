@@ -34,6 +34,8 @@ const stories = [
   { href: '/gallery/', title: 'The gallery', dek: 'Photos of what I have cooked, from Neapolitan pizza to taquitos.', when: 'Kitchen', peek: pizzaPeek },
 ];
 
+const firstName = SITE.name.split(' ')[0];
+const lastName = SITE.name.split(' ').slice(1).join(' ');
 const now = experience[0];
 ---
 
@@ -41,7 +43,7 @@ const now = experience[0];
   <div class="ed">
     <div class="container">
       <p class="eyebrow tag-line">{SITE.role} · {SITE.location}</p>
-      <h1 class="mast">{SITE.name}</h1>
+      <h1 class="mast" aria-label={SITE.name}>{firstName} <em>{lastName}</em></h1>
 
       <div class="spread">
         <div class="dekcol">
@@ -154,9 +156,10 @@ const now = experience[0];
 <style>
   .ed { padding-top: 6px; }
   .tag-line { margin: 34px 0 0; }
+  .mast em { color: var(--accent); }
   .mast {
-    font-size: clamp(3.4rem, 11.6vw, 10.4rem);
-    line-height: 0.9;
+    font-size: clamp(4rem, 15.5vw, 13.5rem);
+    line-height: 0.82;
     letter-spacing: -0.025em;
     margin: 18px 0 0;
     white-space: nowrap;
@@ -170,7 +173,7 @@ const now = experience[0];
     border-bottom: 1px solid var(--rule);
     align-items: start;
   }
-  .dek { font-family: var(--display); font-size: clamp(1.5rem, 2.2vw, 1.8rem); line-height: 1.18; margin: 0 0 24px; }
+  .dek { font-family: var(--display); font-size: clamp(1.7rem, 2.6vw, 2.1rem); line-height: 1.12; margin: 0 0 24px; }
   .facts { margin: 0; border-top: 1px solid var(--border); }
   .facts div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
   .facts dt { font-weight: 600; }
@@ -186,16 +189,17 @@ const now = experience[0];
     font-size: 5.1rem;
     line-height: 0.76;
     padding: 8px 10px 0 0;
+    color: var(--accent);
   }
   .cta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 24px; }
   .more { color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--rule); padding-bottom: 2px; }
-  .more:hover { border-color: var(--marker); }
+  .more:hover { color: var(--accent); border-color: var(--accent); }
 
 
   .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 4px; }
   .head h2 { margin: 0; }
   .head a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 0.92rem; }
-  .head a:hover { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; }
+  .head a:hover { color: var(--accent); }
 
 
   .toc-wrap { padding-bottom: 88px; position: relative; }
@@ -211,11 +215,10 @@ const now = experience[0];
     text-decoration: none;
     transition: padding 0.3s cubic-bezier(.2,.8,.2,1), color 0.2s ease;
   }
-  .toc a:hover { padding-left: 14px; }
-  .toc a:hover h3 { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 0.12em; text-underline-offset: 0.12em; }
+  .toc a:hover { padding-left: 14px; color: var(--accent); }
   .toc h3 { font-size: clamp(1.8rem, 3.8vw, 3rem); line-height: 1; margin: 0; }
   .toc p { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; max-width: 42rem; }
-  .toc .when { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .toc .when { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
   .peek {
     position: fixed;
     left: 0;
@@ -246,7 +249,7 @@ const now = experience[0];
   .plate :global(img) { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; transition: filter 0.3s ease; }
   .plate:hover :global(img) { filter: brightness(1.06) saturate(1.08); }
   .plate .cap { display: block; font-family: var(--display); font-size: 1.2rem; line-height: 1.15; margin-top: 10px; }
-  .plate:hover .cap { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; }
+  .plate:hover .cap { color: var(--accent); }
 
   @media (max-width: 960px) {
     .spread { grid-template-columns: 1fr 1fr; }
