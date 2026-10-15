@@ -14,9 +14,9 @@ const items = (await getCollection('aerospace')).sort(
 <Base title="Aerospace" description="Rockets and flight hardware Dylan has designed, with live 3D models and the files.">
   <section class="section">
     <div class="container">
-      <p class="eyebrow" data-reveal>Aerospace</p>
-      <h1 data-reveal style="--d:1">Built to fly</h1>
-      <p class="lead muted" data-reveal style="--d:2">
+      <p class="eyebrow">Aerospace</p>
+      <h1>Rockets</h1>
+      <p class="lead muted">
         Rocketry and flight hardware, from a competition airframe to test builds. Spin the 3D models, or grab the files.
       </p>
 
@@ -25,7 +25,7 @@ const items = (await getCollection('aerospace')).sort(
           items.map((p, i) => {
             const d = p.data;
             return (
-              <a class="card item" href={`/aerospace/${p.id}/`} data-reveal style={`--d:${Math.min(i, 3) + 3}`}>
+              <a class="card item" href={`/aerospace/${p.id}/`} style={`--d:${Math.min(i, 3) + 3}`}>
                 {d.model ? (
                   <PrintStage model={d.model} title={d.title} printIn={false} />
                 ) : d.image ? (
@@ -55,7 +55,7 @@ const items = (await getCollection('aerospace')).sort(
         }
       </div>
 
-      <p class="more muted" data-reveal>
+      <p class="more muted">
         Looking for parts and fixtures? They're on the <a href="/prints/">3D design</a> page.
       </p>
     </div>

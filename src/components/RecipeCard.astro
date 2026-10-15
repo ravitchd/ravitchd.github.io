@@ -10,7 +10,7 @@ const line = summary(recipe);
 <a
   class="card recipe"
   href={`/recipes/${recipe.id}/`}
-  data-reveal
+ 
   style={`--d:${index % 6}`}
   data-search={`${title} ${description ?? ''} ${tags.join(' ')} ${category}`.toLowerCase()}
   data-category={category}
