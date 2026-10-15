@@ -5,7 +5,7 @@ import { Picture, getImage } from 'astro:assets';
 import { SITE } from '../site';
 import portrait from '../assets/dylan-portrait.jpg';
 import fishing from '../assets/dylan-fishing.jpg';
-import { experience, education } from '../data/resume';
+import { experience } from '../data/resume';
 
 const allProjects = (await getCollection('projects')).sort(
   (a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.valueOf() - a.data.date.valueOf(),
@@ -15,9 +15,8 @@ const dishes = (await getCollection('gallery')).sort((a, b) => a.data.order - b.
 const kitchen = dishes.slice(0, 4);
 
 const year = (d: Date) => d.getUTCFullYear();
-const short = (dates: string) => dates.replace(/[A-Za-z]+ (\d{4})/g, '$1').replace('Present', 'Now');
 
-// Small hover previews for the editorial contents list
+// Small hover previews for the list of sections
 const peek = async (src: ImageMetadata) => (await getImage({ src, width: 480, format: 'webp' })).src;
 const pizzaPeek = dishes[0] ? await peek(dishes[0].data.image) : undefined;
 const menuPeek = dishes[1] ? await peek(dishes[1].data.image) : undefined;
@@ -30,34 +29,24 @@ const stories = [
     when: String(year(p.data.date)),
     peek: undefined as string | undefined,
   })),
-  { href: '/prints/', title: 'Parts on the bench', dek: 'Live 3D models of things I have designed in CAD, from an M6 bolt to a capstone container.', when: 'CAD', peek: undefined },
-  { href: '/recipes/', title: 'The menu', dek: `${recipeCount} recipes written up so far, and a long list still to write.`, when: 'Now', peek: menuPeek },
-  { href: '/gallery/', title: 'The gallery', dek: 'A camera roll full of dinner, from Neapolitan pizza to taquitos.', when: 'Now', peek: pizzaPeek },
+  { href: '/prints/', title: 'Parts on the bench', dek: 'Live 3D models of parts I have designed, from an M6 bolt to my capstone container.', when: '3D Design', peek: undefined },
+  { href: '/recipes/', title: 'The menu', dek: `${recipeCount} of my recipes written up so far, and a long list still to write.`, when: 'Kitchen', peek: menuPeek },
+  { href: '/gallery/', title: 'The gallery', dek: 'Photos of what I have cooked, from Neapolitan pizza to taquitos.', when: 'Kitchen', peek: pizzaPeek },
 ];
 
-const firstName = SITE.name.split(' ')[0];
-const lastName = SITE.name.split(' ').slice(1).join(' ');
 const now = experience[0];
 ---
 
 <Base>
   <div class="ed">
     <div class="container">
-      <div class="issue">
-        <span>Profile</span>
-        <span>{SITE.location}</span>
-        <span>Vol. 1</span>
-      </div>
-      <h1 class="mast" aria-label={SITE.name}>
-        <span class="mw" style="--i:0">{firstName}</span>
-        <em class="mw" style="--i:1">{lastName}</em>
-      </h1>
+      <p class="eyebrow tag-line">{SITE.role} · {SITE.location}</p>
+      <h1 class="mast">{SITE.name}</h1>
 
       <div class="spread">
         <div class="dekcol">
-          <p class="eyebrow">{SITE.role}</p>
           <p class="dek">
-            The engineer routing hazardous gas through chip fabs, and the pizza he makes when he gets home.
+            I route high-pressure and hazardous gas through chip fabs. At home, I make a lot of pizza.
           </p>
           <dl class="facts">
             <div><dt>Now</dt><dd>{now.role}, {now.org}</dd></div>
@@ -78,11 +67,11 @@ const now = experience[0];
         </figure>
         <div class="body">
           <p>
-            Dylan designs fluid delivery systems for semiconductor fabrication facilities: high-pressure and hazardous gas
+            I design fluid delivery systems for semiconductor fabrication facilities: high-pressure and hazardous gas
             routing, pipe classes picked for chemical compatibility, and the constructability reviews that keep it all buildable.
           </p>
           <p>
-            Before that he grew silicon ingots in vacuum furnaces, drew sheet metal for Intel and LAM Research, and helped
+            Before that I grew silicon ingots in vacuum furnaces, drew sheet metal for Intel and LAM Research, and helped
             put a rocket into the top three of its category at Spaceport America Cup.
           </p>
           <div class="cta">
@@ -93,42 +82,14 @@ const now = experience[0];
       </div>
     </div>
 
-    <blockquote class="pull" data-reveal>
-      <p>“I design <span class="rot" data-rotate={JSON.stringify(SITE.rotating)}>{SITE.rotating[0]}</span>”</p>
-    </blockquote>
-
-    <section class="container career" data-reveal>
-      <div class="head"><h2>The career, <em>in brief</em></h2><a href="/resume/">Full resume →</a></div>
-      <ol class="cols">
-        {
-          experience.map((job, i) => (
-            <li>
-              <span class="n">{String(i + 1).padStart(2, '0')}</span>
-              <span class="when">{short(job.dates)}</span>
-              <h3>{job.role}</h3>
-              <p class="org">{job.org} · {job.location}</p>
-              <p>{job.points[0]}</p>
-            </li>
-          ))
-        }
-        <li class="school">
-          <span class="n">{String(experience.length + 1).padStart(2, '0')}</span>
-          <span class="when">{short(education[0].dates)}</span>
-          <h3>{education[0].degree.replace('B.S., ', 'B.S. ')}</h3>
-          <p class="org">{education[0].school}</p>
-          <p>Capstone sponsored by TSMC Washington. Rocketry with the WSUV Aerospace Club.</p>
-        </li>
-      </ol>
-    </section>
-
     <section class="container toc-wrap">
-      <div class="head" data-reveal><h2>In this issue</h2><span class="muted">{stories.length} stories</span></div>
+      <p class="eyebrow">Around the site</p>
+      <div class="head"><h2>Work, rockets, parts and dinner</h2></div>
       <ul class="toc">
         {
-          stories.map((s, i) => (
-            <li data-reveal>
+          stories.map((s) => (
+            <li>
               <a href={s.href} data-peek={s.peek}>
-                <span class="n">{String(i + 1).padStart(2, '0')}</span>
                 <span class="t">
                   <h3>{s.title}</h3>
                   <p>{s.dek}</p>
@@ -143,7 +104,7 @@ const now = experience[0];
     </section>
 
     <section class="container feature">
-      <figure data-reveal>
+      <figure>
         <Picture
           src={fishing}
           widths={[420, 640, 840]}
@@ -153,12 +114,12 @@ const now = experience[0];
         />
         <figcaption><b>Fig. 2</b> Waiting on a bite while an aircraft carrier slides past in the fog.</figcaption>
       </figure>
-      <div class="feature-copy" data-reveal style="--d:1">
+      <div class="feature-copy">
         <p class="eyebrow">Off the clock</p>
-        <h2>On the water, or in the <em>kitchen</em>.</h2>
-        <p class="lead">When he isn't routing gas lines, Dylan is on the beach with a rod or at the counter with a pizza peel.</p>
+        <h2>Fishing, and a lot of pizza.</h2>
+        <p class="lead">When I'm not routing gas lines, I'm on the beach with a rod or at the counter with a pizza peel.</p>
         <p>
-          {recipeCount} of his recipes are written up on this site so far, from bagels to lasagna, with dozens more on
+          {recipeCount} of my recipes are written up on this site so far, from bagels to lasagna, with dozens more on
           the list.
         </p>
         <div class="cta">
@@ -169,11 +130,12 @@ const now = experience[0];
     </section>
 
     <section class="container kitchen">
-      <div class="head" data-reveal><h2>From the kitchen</h2><a href="/gallery/">Gallery →</a></div>
+      <p class="eyebrow">Kitchen</p>
+      <div class="head"><h2>From my kitchen</h2><a href="/gallery/">Gallery →</a></div>
       <div class="plates">
         {
           kitchen.map((d, i) => (
-            <a href={d.data.recipe ? `/recipes/${d.data.recipe.id}/` : '/gallery/'} class="plate" data-reveal style={`--d:${i}`}>
+            <a href={d.data.recipe ? `/recipes/${d.data.recipe.id}/` : '/gallery/'} class="plate" style={`--d:${i}`}>
               <Picture src={d.data.image} widths={[300, 480, 640]} sizes="(max-width: 760px) 50vw, 260px" formats={['avif', 'webp']} alt={d.data.alt} />
               <span class="cap">{d.data.title}</span>
             </a>
@@ -191,32 +153,14 @@ const now = experience[0];
 
 <style>
   .ed { padding-top: 6px; }
-  .issue {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+  .tag-line { margin: 34px 0 0; }
   .mast {
-    font-size: clamp(4rem, 15.5vw, 13.5rem);
-    line-height: 0.82;
-    letter-spacing: -0.035em;
-    margin: 30px 0 0;
+    font-size: clamp(3.4rem, 11.6vw, 10.4rem);
+    line-height: 0.9;
+    letter-spacing: -0.025em;
+    margin: 18px 0 0;
     white-space: nowrap;
   }
-  .mast em { color: var(--accent); }
-  .mw { display: inline-block; }
-  .mw + .mw { margin-left: 0.18em; }
-  @media (prefers-reduced-motion: no-preference) {
-    .js .mw { animation: rise 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 120ms + 80ms); }
-  }
-  @keyframes rise { from { opacity: 0; transform: translateY(0.25em); } }
 
   .spread {
     display: grid;
@@ -226,7 +170,7 @@ const now = experience[0];
     border-bottom: 1px solid var(--rule);
     align-items: start;
   }
-  .dek { font-family: var(--display); font-size: clamp(1.7rem, 2.6vw, 2.1rem); line-height: 1.12; margin: 0 0 24px; }
+  .dek { font-family: var(--display); font-size: clamp(1.5rem, 2.2vw, 1.8rem); line-height: 1.18; margin: 0 0 24px; }
   .facts { margin: 0; border-top: 1px solid var(--border); }
   .facts div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
   .facts dt { font-weight: 600; }
@@ -242,45 +186,23 @@ const now = experience[0];
     font-size: 5.1rem;
     line-height: 0.76;
     padding: 8px 10px 0 0;
-    color: var(--accent);
   }
   .cta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 24px; }
   .more { color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--rule); padding-bottom: 2px; }
-  .more:hover { color: var(--accent); border-color: var(--accent); }
+  .more:hover { border-color: var(--marker); }
 
-  .pull { margin: 0; padding: 88px 24px; text-align: center; }
-  .pull p {
-    font-family: var(--display);
-    font-style: italic;
-    font-size: clamp(2rem, 4.6vw, 3.8rem);
-    line-height: 1.08;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-  .rot { color: var(--accent); display: inline-block; transition: opacity 0.35s ease, transform 0.35s ease; }
-  .rot:global(.out) { opacity: 0; transform: translateY(-0.2em); }
-  .rot:global(.in) { opacity: 0; transform: translateY(0.2em); transition: none; }
 
   .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 4px; }
   .head h2 { margin: 0; }
   .head a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 0.92rem; }
-  .head a:hover { color: var(--accent); }
+  .head a:hover { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; }
 
-  .career { padding-bottom: 88px; }
-  .cols { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
-  .cols li { padding: 22px 22px 10px; border-left: 1px solid var(--border); }
-  .cols li:first-child { border-left: 0; padding-left: 0; }
-  .cols .n { font-family: var(--display); font-size: 2.6rem; line-height: 1; color: var(--accent); display: block; }
-  .cols .when { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
-  .cols h3 { margin: 0 0 4px; font-size: 1.5rem; line-height: 1.05; }
-  .cols .org { font-size: 0.88rem; font-weight: 500; margin-bottom: 8px; }
-  .cols p { font-size: 0.9rem; color: var(--muted); line-height: 1.55; margin: 0 0 8px; }
 
   .toc-wrap { padding-bottom: 88px; position: relative; }
   .toc { list-style: none; margin: 0; padding: 0; }
   .toc a {
     display: grid;
-    grid-template-columns: 64px 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: baseline;
     gap: 20px;
     padding: 22px 0;
@@ -289,11 +211,11 @@ const now = experience[0];
     text-decoration: none;
     transition: padding 0.3s cubic-bezier(.2,.8,.2,1), color 0.2s ease;
   }
-  .toc a:hover { padding-left: 14px; color: var(--accent); }
-  .toc .n { font-family: var(--display); font-size: 1.3rem; color: var(--muted); }
+  .toc a:hover { padding-left: 14px; }
+  .toc a:hover h3 { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 0.12em; text-underline-offset: 0.12em; }
   .toc h3 { font-size: clamp(1.8rem, 3.8vw, 3rem); line-height: 1; margin: 0; }
   .toc p { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; max-width: 42rem; }
-  .toc .when { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+  .toc .when { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .peek {
     position: fixed;
     left: 0;
@@ -324,26 +246,20 @@ const now = experience[0];
   .plate :global(img) { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; transition: filter 0.3s ease; }
   .plate:hover :global(img) { filter: brightness(1.06) saturate(1.08); }
   .plate .cap { display: block; font-family: var(--display); font-size: 1.2rem; line-height: 1.15; margin-top: 10px; }
-  .plate:hover .cap { color: var(--accent); }
+  .plate:hover .cap { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; }
 
   @media (max-width: 960px) {
     .spread { grid-template-columns: 1fr 1fr; }
     .body { grid-column: 1 / -1; }
-    .cols { grid-template-columns: 1fr 1fr; }
-    .cols li:nth-child(3) { border-left: 0; padding-left: 0; }
     .feature { grid-template-columns: 1fr 1fr; gap: 40px; }
   }
   @media (max-width: 680px) {
-    .issue span:nth-child(2) { display: none; }
     .mast { white-space: normal; margin-top: 20px; }
     .spread { grid-template-columns: 1fr; gap: 28px; padding-top: 28px; }
-    .cols { grid-template-columns: 1fr; }
-    .cols li { border-left: 0; padding-left: 0; border-bottom: 1px solid var(--border); }
-    .toc a { grid-template-columns: 34px 1fr; gap: 12px; }
+    .toc a { grid-template-columns: 1fr; gap: 12px; }
     .toc .when { display: none; }
     .feature { grid-template-columns: 1fr; }
     .plates { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .pull { padding: 64px 16px; }
   }
 
 </style>

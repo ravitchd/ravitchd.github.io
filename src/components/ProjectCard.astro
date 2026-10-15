@@ -5,7 +5,7 @@ const { project, index = 0 } = Astro.props;
 const { title, summary, tech } = project.data;
 ---
 
-<a class="card" href={`/projects/${project.id}/`} data-reveal style={`--d:${index}`}>
+<a class="card" href={`/projects/${project.id}/`} style={`--d:${index}`}>
   <h3 style={`view-transition-name: p-${project.id}`}>{title}</h3>
   <p>{summary}</p>
   <div class="tags">{tech.map((t) => <span class="tag">{t}</span>)}</div>

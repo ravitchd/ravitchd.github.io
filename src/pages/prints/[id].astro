@@ -45,7 +45,7 @@ const specs = [
         }
       </div>
 
-      <div data-reveal>
+      <div>
         {
           d.model ? (
             <PrintStage model={d.model} title={d.title} layerHeight={d.layerHeight} controls />
@@ -66,7 +66,7 @@ const specs = [
         </div>
         {
           specs.length > 0 && (
-            <aside data-reveal>
+            <aside>
               <h2>Print settings</h2>
               {d.example && <p class="muted note">Example values</p>}
               <dl>

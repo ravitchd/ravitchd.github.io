@@ -44,7 +44,7 @@ const d = item.data;
 
       {
         (d.model || d.image) && (
-          <div data-reveal>
+          <div>
             {d.model ? (
               <PrintStage model={d.model} title={d.title} controls printIn={false} />
             ) : (
@@ -63,7 +63,7 @@ const d = item.data;
         </div>
         {
           d.tools.length > 0 && (
-            <aside data-reveal>
+            <aside>
               <h2>Tools</h2>
               <ul>
                 {d.tools.map((t) => <li>{t}</li>)}

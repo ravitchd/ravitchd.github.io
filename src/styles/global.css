@@ -1,30 +1,36 @@
-/* Editorial: the site reads like a magazine profile.
-   Everything visual hangs off the tokens below. */
+/* Everything visual hangs off the tokens below. */
 :root {
-  /* Editorial: warm newsprint, ink and one cobalt accent. */
-  --bg: #f1ede4;
-  --surface: #f7f4ec;
-  --text: #17140f;
-  --muted: #6c6457;
-  --border: #d9d1c2;
-  --rule: #17140f;
-  --accent: #2340d8;
-  --on-accent: #ffffff;
-  --accent-soft: #e2e5f6;
-  --glow-1: #e2e5f6;
-  --glow-2: #ece6d8;
+  /* Paper, ink and graphite, with two working colors borrowed from a fab:
+     marker yellow (ASME A13.1 pipe-marker bands, for labels and link underlines)
+     and redline red (design-review markups, for notes only). */
+  --bg: #f3f2ee;
+  --surface: #f9f8f5;
+  --text: #161615;
+  --muted: #5d5c57;
+  --border: #d3d1c9;
+  --rule: #161615;
+  --accent: #161615;
+  --on-accent: #f3f2ee;
+  --accent-soft: #ebe9e3;
+  --marker: #f5c400;
+  --marker-ink: #161615;
+  --redline: #c8231b;
+  --model: #c8c0a9;
+  --glow-1: #ebe9e3;
+  --glow-2: #e6e4dd;
   --radius: 0px;
   --pill: 0px;
   --max: 1120px;
-  --display: 'Instrument Serif', Georgia, serif;
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --heading-weight: 400;
-  --heading-tracking: -0.012em;
-  --h1: clamp(3rem, 7.2vw, 5.8rem);
-  --h2: clamp(2rem, 3.6vw, 2.8rem);
-  --h3: 1.55rem;
+  --heading-tracking: -0.01em;
+  --h1: clamp(2.7rem, 6.2vw, 5rem);
+  --h2: clamp(1.9rem, 3.4vw, 2.6rem);
+  --h3: 1.45rem;
   --label-size: 0.72rem;
-  --label-tracking: 0.16em;
+  --label-tracking: 0.12em;
   color-scheme: light;
 }
 
@@ -52,14 +58,21 @@ h1, h2, h3 {
 h1 { font-size: var(--h1); line-height: 0.98; }
 h2 { font-size: var(--h2); }
 h3 { font-size: var(--h3); }
-h1 em, h2 em { font-style: italic; color: var(--accent); }
+h1 em, h2 em { font-style: italic; }
 
 p { margin: 0 0 1em; }
 
-a { color: var(--accent); text-underline-offset: 3px; }
-a:hover { text-decoration-thickness: 2px; }
+a {
+  color: var(--text);
+  text-decoration-color: var(--marker);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+a:hover { text-decoration-thickness: 0.5em; text-underline-offset: -0.28em; text-decoration-skip-ink: none; }
 
 img { max-width: 100%; height: auto; }
+
+button, input, select, textarea { font: inherit; }
 
 .container {
   width: 100%;
@@ -69,14 +82,40 @@ img { max-width: 100%; height: auto; }
 }
 @media (max-width: 600px) { .container { padding: 0 16px; } }
 
-/* Small all-caps label above a heading */
-.eyebrow, .label {
-  font-family: var(--sans);
+/* Pipe marker: the yellow band and flow arrow used on gas lines in a fab.
+   Labels a section; the arrow points the way the page reads. */
+.eyebrow {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.7em;
+  width: fit-content;
+  background: var(--marker);
+  color: var(--marker-ink);
+  font-family: var(--mono);
   font-size: var(--label-size);
   font-weight: 600;
   letter-spacing: var(--label-tracking);
+  line-height: 1.2;
   text-transform: uppercase;
-  color: var(--accent);
+  padding: 0.34em 0 0.34em 0.8em;
+  margin-bottom: 1rem;
+}
+.eyebrow::after {
+  content: '';
+  width: 1.8em;
+  margin-block: -0.34em;
+  background: var(--marker-ink);
+  clip-path: polygon(0 0, 55% 0, 100% 50%, 55% 100%, 0 100%);
+}
+
+/* Small mono label for specs and metadata */
+.label {
+  font-family: var(--mono);
+  font-size: var(--label-size);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
   margin-bottom: 0.9rem;
 }
 
@@ -100,18 +139,19 @@ img { max-width: 100%; height: auto; }
 }
 .btn:hover { background: var(--text); color: var(--bg); text-decoration: none; }
 .btn.primary { background: var(--text); border-color: var(--text); color: var(--bg); }
-.btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: var(--marker); border-color: var(--marker); color: var(--marker-ink); }
 
+/* Tags read as a spec line: TOOL · MATERIAL · PROCESS */
 .tag {
   display: inline-block;
-  padding: 0.12rem 0.5rem;
-  border-radius: var(--pill);
-  border: 1px solid var(--border);
   color: var(--muted);
-  font-size: 0.74rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
+.tag + .tag::before { content: '·'; margin: 0 0.55em 0 0; color: var(--border); }
 
 .grid {
   display: grid;
@@ -133,8 +173,8 @@ img { max-width: 100%; height: auto; }
 }
 .card h3 { margin: 0; transition: color 0.2s ease; }
 .card p { margin: 0; color: var(--muted); font-size: 0.97rem; }
-a.card:hover h3 { color: var(--accent); }
-.card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 0.5rem; }
+a.card:hover h3 { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.card .tags { display: flex; flex-wrap: wrap; gap: 4px 0.55em; margin-top: auto; padding-top: 0.5rem; }
 
 .card .arrow {
   position: absolute;
@@ -160,50 +200,23 @@ a.card:hover .arrow, a.card:focus-visible .arrow { opacity: 1; transform: none; 
 }
 .section-head h2 { margin: 0; }
 .section-head a { color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
-.section-head a:hover { color: var(--accent); }
+.section-head a:hover { text-decoration: underline; text-decoration-color: var(--marker); text-decoration-thickness: 3px; }
 
 .prose { max-width: 700px; }
 .prose h2 { margin-top: 1.6em; }
 .prose ul, .prose ol { padding-left: 1.3em; }
 .prose li { margin-bottom: 0.35em; }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--redline); outline-offset: 3px; }
 
-::selection { background: var(--accent); color: var(--on-accent); }
+::selection { background: var(--marker); color: var(--marker-ink); }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
 
-/* Scroll progress bar, driven purely by CSS where supported */
-.progress { display: none; }
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .progress {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      z-index: 60;
-      background: var(--accent);
-      transform-origin: 0 50%;
-      animation: progress linear both;
-      animation-timeline: scroll(root);
-    }
-  }
-}
-@keyframes progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-/* Reveal on scroll (only hidden when JS is running) */
-.js [data-reveal] {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.8s cubic-bezier(.2,.8,.2,1), transform 0.8s cubic-bezier(.2,.8,.2,1);
-  transition-delay: calc(var(--d, 0) * 90ms);
-}
-.js [data-reveal].in { opacity: 1; transform: none; }
+/* Content is in place when the page loads; no scroll-in fades. */
 
 /* Page transitions between pages (browser-native, falls back to a normal load) */
 @view-transition { navigation: auto; }
@@ -220,7 +233,6 @@ a.card:hover .arrow, a.card:focus-visible .arrow { opacity: 1; transform: none; 
 @keyframes vt-in { from { opacity: 0; transform: translateY(10px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .card, .btn { transition: none; }
 }
 

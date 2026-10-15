@@ -67,7 +67,7 @@ const data = JSON.stringify(
 
   <header class="g-head container">
     <p class="eyebrow">Gallery</p>
-    <h1 class="g-title">Cooked <em>at home.</em></h1>
+    <h1 class="g-title">What I've cooked</h1>
     <dl class="g-stats">
       <div><dt>Dishes</dt><dd data-count={dishes.length}>{dishes.length}</dd></div>
       <div><dt>Pizza nights</dt><dd data-count={pizzaNights}>{pizzaNights}</dd></div>
@@ -232,7 +232,6 @@ const data = JSON.stringify(
     letter-spacing: -0.03em;
     margin: 0;
   }
-  .g-title em { color: var(--accent); font-style: normal; }
   .g-stats { display: flex; gap: 14px 36px; margin: 32px 0 0; flex-wrap: wrap; }
   .g-stats div { display: flex; flex-direction: column-reverse; }
   .g-stats dt { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
