@@ -1,8 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import RecipeCard from '../components/RecipeCard.astro';
 import { Picture, getImage } from 'astro:assets';
 import { SITE } from '../site';
 import portrait from '../assets/dylan-portrait.jpg';
@@ -12,10 +10,6 @@ import { experience, education } from '../data/resume';
 const allProjects = (await getCollection('projects')).sort(
   (a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.valueOf() - a.data.date.valueOf(),
 );
-const projects = allProjects.slice(0, 3);
-const recipes = (await getCollection('recipes'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
 const recipeCount = (await getCollection('recipes')).length;
 const dishes = (await getCollection('gallery')).sort((a, b) => a.data.order - b.data.order);
 const kitchen = dishes.slice(0, 4);
@@ -47,8 +41,7 @@ const now = experience[0];
 ---
 
 <Base>
-  <!-- ======================= EDITORIAL ======================= -->
-  <div class="ed only-ed">
+  <div class="ed">
     <div class="container">
       <div class="issue">
         <span>Profile</span>
@@ -190,112 +183,6 @@ const now = experience[0];
     </section>
   </div>
 
-  <!-- ======================= SPEC SHEET ======================= -->
-  <div class="spec only-spec">
-    <section class="container sp-hero">
-      <div class="frame" data-coords>
-        <span class="tick t1" aria-hidden="true">A</span>
-        <span class="tick t2" aria-hidden="true">B</span>
-        <span class="tick t3" aria-hidden="true">1</span>
-        <span class="tick t4" aria-hidden="true">2</span>
-        <span class="readout" aria-hidden="true">X 000.0 · Y 000.0</span>
-        <div class="sp-copy">
-          <p class="eyebrow">{SITE.role} · {SITE.location}</p>
-          <h1><span>{firstName}</span> <span class="ghost">{lastName}</span></h1>
-          <p class="lede">
-            I design <mark>hazardous gas and fluid delivery systems</mark> for semiconductor fabs. Off the clock I build
-            rockets, model parts in CAD, and make a lot of pizza.
-          </p>
-          <div class="btns">
-            <a class="btn primary" href="/resume/">View resume ↗</a>
-            <a class="btn" href="/projects/">See projects →</a>
-            <a class="btn" href={SITE.github}>GitHub</a>
-          </div>
-        </div>
-        <figure class="fig">
-          <div class="dim" aria-hidden="true"><span>Fig. 1 · Portrait</span></div>
-          <div class="photo">
-            <Picture
-              src={portrait}
-              widths={[400, 640, 880]}
-              sizes="(max-width: 860px) 100vw, 400px"
-              formats={['avif', 'webp']}
-              alt="Dylan in a dark suit and patterned tie, checking his watch"
-              loading="eager"
-            />
-            <span class="bub b1" aria-hidden="true">1</span>
-            <span class="bub b2" aria-hidden="true">2</span>
-            <span class="bub b3" aria-hidden="true">3</span>
-          </div>
-          <ol class="legend">
-            <li><b>1</b> {now.org} · {now.role}</li>
-            <li><b>2</b> WSU · B.S. ME, 2025</li>
-            <li><b>3</b> 3rd in category, Spaceport America Cup</li>
-          </ol>
-        </figure>
-      </div>
-    </section>
-
-    <section class="container sp-sec" data-reveal>
-      <h2 class="sp-h"><b>01</b>Experience</h2>
-      <table class="bom">
-        <thead><tr><th>Item</th><th>Role</th><th>Organization</th><th class="m">Dates</th></tr></thead>
-        <tbody>
-          {
-            experience.map((job, i) => (
-              <tr>
-                <td class="i">1.{i + 1}</td>
-                <td class="r">{job.role}</td>
-                <td>{job.org} · {job.location}</td>
-                <td class="m">{short(job.dates)}</td>
-              </tr>
-            ))
-          }
-          <tr>
-            <td class="i">1.{experience.length + 1}</td>
-            <td class="r">{education[0].degree.replace('B.S., ', 'B.S. ')}</td>
-            <td>{education[0].school}</td>
-            <td class="m">{short(education[0].dates)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section class="container sp-sec">
-      <h2 class="sp-h" data-reveal><b>02</b>Parts list<a href="/projects/">All projects →</a></h2>
-      <div class="grid">{projects.map((p, i) => <ProjectCard project={p} index={i} />)}</div>
-    </section>
-
-    <section class="container sp-sec">
-      <h2 class="sp-h" data-reveal><b>03</b>Detail B: off the clock</h2>
-      <div class="detail" data-reveal>
-        <figure>
-          <Picture
-            src={fishing}
-            widths={[400, 640, 800]}
-            sizes="(max-width: 860px) 100vw, 400px"
-            formats={['avif', 'webp']}
-            alt="Dylan in a green rain jacket fishing from a beach while an aircraft carrier passes in the fog"
-          />
-          <figcaption>Detail B · Scale 1:1</figcaption>
-        </figure>
-        <div>
-          <p class="note-h">Notes</p>
-          <ol class="notes">
-            <li>When I'm not routing gas lines, I'm on the water with a rod or in the kitchen with a pizza peel.</li>
-            <li>{recipeCount} recipes written up so far, with dozens more on the list.</li>
-            <li>Photos of what comes out of the oven live in the gallery.</li>
-          </ol>
-          <div class="btns"><a class="btn" href="/recipes/">Open the menu</a><a class="btn" href="/gallery/">Gallery</a></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="container sp-sec">
-      <h2 class="sp-h" data-reveal><b>04</b>From the kitchen<a href="/recipes/">All recipes →</a></h2>
-      <div class="grid">{recipes.map((r, i) => <RecipeCard recipe={r} index={i} />)}</div>
-    </section>
-  </div>
 </Base>
 
 <script>
@@ -303,7 +190,6 @@ const now = experience[0];
 </script>
 
 <style>
-  /* ---------------- Editorial ---------------- */
   .ed { padding-top: 6px; }
   .issue {
     display: flex;
@@ -460,128 +346,4 @@ const now = experience[0];
     .pull { padding: 64px 16px; }
   }
 
-  /* ---------------- Spec Sheet ---------------- */
-  .sp-hero { padding-top: 36px; padding-bottom: 24px; }
-  .frame {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 56px;
-    padding: 56px 48px 44px;
-    border: 1px solid var(--rule);
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 32px 32px;
-    background-position: -1px -1px;
-    background-color: var(--bg);
-  }
-  .frame::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 55%, color-mix(in srgb, var(--bg) 70%, transparent));
-    pointer-events: none;
-  }
-  .frame > .sp-copy, .frame > .fig { position: relative; }
-  .tick { position: absolute; font: 500 10px var(--mono); color: var(--muted); background: var(--bg); padding: 0 4px; line-height: 1; z-index: 1; }
-  .t1 { left: -8px; top: 30%; } .t2 { left: -8px; top: 75%; }
-  .t3 { top: -6px; left: 30%; } .t4 { top: -6px; left: 75%; }
-  .readout {
-    position: absolute;
-    right: 12px;
-    top: 10px;
-    font: 500 11px var(--mono);
-    color: var(--muted);
-    letter-spacing: 0.04em;
-    z-index: 1;
-  }
-  .sp-copy { align-self: center; }
-  .spec h1 { margin: 18px 0 24px; font-size: clamp(3rem, 7.4vw, 6.2rem); line-height: 0.92; }
-  .spec h1 span { display: block; }
-  .ghost { color: color-mix(in srgb, var(--text) 32%, var(--bg)); }
-  .lede { font-size: 1.18rem; line-height: 1.5; max-width: 32rem; margin: 0 0 28px; }
-  mark { background: linear-gradient(transparent 62%, color-mix(in srgb, var(--accent) 30%, transparent) 62%); color: inherit; }
-  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
-  .fig { margin: 0; }
-  .dim {
-    position: relative;
-    border-top: 1px solid var(--muted);
-    margin: 0 0 14px;
-    text-align: center;
-    font: 500 10.5px var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-  }
-  .dim::before, .dim::after { content: ''; position: absolute; top: -5px; height: 9px; border-left: 1px solid var(--muted); }
-  .dim::before { left: 0; } .dim::after { right: 0; }
-  .dim span { position: relative; top: -8px; background: var(--bg); padding: 0 8px; }
-  .photo { position: relative; border: 1px solid var(--rule); }
-  .photo :global(img) { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
-  .bub {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font: 500 11px var(--mono);
-    background: var(--bg);
-    border: 1px solid var(--rule);
-  }
-  .bub::after { content: ''; position: absolute; width: 28px; height: 1px; background: var(--rule); }
-  .b1 { top: 22%; right: -12px; } .b1::after { right: 23px; }
-  .b2 { top: 52%; left: -12px; } .b2::after { left: 23px; }
-  .b3 { bottom: 14%; right: -12px; } .b3::after { right: 23px; }
-  .legend { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; font: 400 0.8rem var(--mono); color: var(--muted); }
-  .legend b { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--rule); border-radius: 50%; font-size: 10px; color: var(--text); font-weight: 500; margin-right: 8px; }
-
-  .sp-sec { padding-top: 56px; }
-  .sp-h {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    border-top: 1.5px solid var(--rule);
-    padding-top: 16px;
-    margin-bottom: 24px;
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .sp-h b { font-family: var(--display); font-size: 2.4rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
-  .sp-h a { margin-left: auto; color: var(--text); text-decoration: none; }
-  .sp-h a:hover { color: var(--accent); }
-  .bom { width: 100%; border-collapse: collapse; }
-  .bom th { font: 500 0.7rem var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); text-align: left; padding: 0 12px 10px 0; border-bottom: 1px solid var(--rule); }
-  .bom td { padding: 15px 12px 15px 0; border-bottom: 1px solid var(--border); vertical-align: baseline; }
-  .bom tbody tr { transition: background 0.15s ease; }
-  .bom tbody tr:hover { background: var(--accent-soft); }
-  .bom .i, .bom .m { font: 400 0.8rem var(--mono); color: var(--muted); white-space: nowrap; }
-  .bom .i { width: 64px; }
-  .bom .r { font-weight: 600; font-size: 1.05rem; }
-  .detail { display: grid; grid-template-columns: 380px 1fr; gap: 48px; align-items: start; }
-  .detail figure { margin: 0; }
-  .detail :global(img) { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 1px solid var(--rule); }
-  .detail figcaption { font: 400 0.75rem var(--mono); text-transform: uppercase; }
-  .note-h { font: 500 0.75rem var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
-  .notes { padding-left: 1.4em; margin: 0 0 24px; font-size: 1.1rem; line-height: 1.55; }
-  .notes li { margin-bottom: 0.8em; padding-left: 0.3em; }
-  .notes li::marker { font: 500 0.85rem var(--mono); color: var(--accent); }
-
-  @media (max-width: 860px) {
-    .frame { grid-template-columns: 1fr; gap: 40px; padding: 40px 22px 28px; }
-    .fig { max-width: 440px; }
-    .detail { grid-template-columns: 1fr; gap: 28px; }
-    .detail figure { max-width: 420px; }
-    .bom .m { display: none; }
-    .readout { display: none; }
-  }
-  @media (max-width: 520px) {
-    .frame { padding: 32px 16px 24px; }
-    .bom td:nth-child(3) { font-size: 0.9rem; }
-    .bom .i { width: 40px; }
-  }
 </style>

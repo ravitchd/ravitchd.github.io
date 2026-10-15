@@ -74,14 +74,6 @@ const path = Astro.url.pathname;
     text-decoration: none;
     white-space: nowrap;
   }
-  :global(html[data-look='spec']) .brand {
-    font-family: var(--mono);
-    font-size: 0.82rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  :global(html[data-look='spec']) .brand::after { content: ' / ME'; color: var(--muted); }
   .short { display: none; }
   nav { display: flex; gap: 4px; }
   nav a {
@@ -93,13 +85,6 @@ const path = Astro.url.pathname;
     font-weight: 500;
     white-space: nowrap;
     transition: color 0.2s ease;
-  }
-  :global(html[data-look='spec']) nav a {
-    font-family: var(--mono);
-    font-size: 0.76rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--muted);
   }
   nav a::after {
     content: '';
@@ -116,8 +101,6 @@ const path = Astro.url.pathname;
   nav a:hover { color: var(--accent); }
   nav a:hover::after, nav a[aria-current='page']::after { transform: scaleX(1); transform-origin: left; }
   nav a[aria-current='page'] { color: var(--accent); }
-  :global(html[data-look='spec']) nav a:hover, :global(html[data-look='spec']) nav a[aria-current='page'] { color: var(--text); }
-  :global(html[data-look='spec']) nav a::after { background: var(--accent); height: 2px; }
   .menu { display: none; }
   .sr-only {
     position: absolute;
@@ -183,8 +166,7 @@ const path = Astro.url.pathname;
       transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.8,.2,1), visibility 0s;
     }
     nav a { padding: 0.75rem 0.2rem; font-size: 1.05rem; border-bottom: 1px solid var(--border); }
-    :global(html[data-look='spec']) nav a { font-size: 0.9rem; }
-    nav a::after { display: none; }
+      nav a::after { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     nav, .bars, .bars::before, .bars::after { transition: none !important; }

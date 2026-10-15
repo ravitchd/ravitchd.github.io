@@ -1,6 +1,5 @@
-// Home page motion. Editorial: a photo preview follows the cursor over the
-// contents list. Spec Sheet: a coordinate readout tracks the cursor over the
-// hero drawing. Both are skipped without a fine pointer.
+// Home page motion: a photo preview follows the cursor over the contents
+// list. Skipped without a fine pointer.
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -32,17 +31,4 @@ function initPeek() {
   });
 }
 
-function initReadout() {
-  const frame = document.querySelector<HTMLElement>('[data-coords]');
-  const out = frame?.querySelector<HTMLElement>('.readout');
-  if (!frame || !out || !finePointer) return;
-  const mm = (px: number) => (px * 0.2646).toFixed(1).padStart(5, '0'); // 96 dpi
-  frame.addEventListener('pointermove', (e) => {
-    const r = frame.getBoundingClientRect();
-    out.textContent = `X ${mm(e.clientX - r.left)} · Y ${mm(e.clientY - r.top)} mm`;
-  });
-  frame.addEventListener('pointerleave', () => (out.textContent = 'X 000.0 · Y 000.0'));
-}
-
 initPeek();
-initReadout();

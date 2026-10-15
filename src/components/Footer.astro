@@ -5,8 +5,7 @@ const year = new Date().getFullYear();
 
 <footer>
   <div class="container">
-    <!-- Editorial: a colophon -->
-    <div class="colophon only-ed">
+    <div class="colophon">
       <a class="sign" href="/">{SITE.name}</a>
       <p>{SITE.role} in {SITE.location}. Set in Instrument Serif and Inter.</p>
       <div class="links">
@@ -16,15 +15,6 @@ const year = new Date().getFullYear();
         <a href={SITE.resumePdf}>Resume (PDF)</a>
       </div>
       <span class="muted small">© {year}</span>
-    </div>
-
-    <!-- Spec Sheet: a drawing title block -->
-    <div class="tblock only-spec">
-      <div class="cell wide"><small>Drawn by</small><strong>{SITE.name}</strong></div>
-      <div class="cell"><small>Contact</small>{SITE.email ? <a href={`mailto:${SITE.email}`}>{SITE.email}</a> : <span>—</span>}</div>
-      <div class="cell"><small>Links</small><span class="row">{SITE.github && <a href={SITE.github}>GitHub</a>}<a href={SITE.resumePdf}>Resume</a></span></div>
-      <div class="cell"><small>Dwg no.</small><strong>DR-001</strong></div>
-      <div class="cell"><small>Rev</small><strong>{year}</strong></div>
     </div>
   </div>
 </footer>
@@ -47,26 +37,7 @@ const year = new Date().getFullYear();
   .colophon p { margin: 0; color: var(--muted); }
   .links { display: flex; gap: 20px; flex-wrap: wrap; font-weight: 500; }
 
-  .tblock {
-    display: grid;
-    grid-template-columns: 1.4fr 1.4fr 1fr 0.7fr 0.6fr;
-    border: 1.5px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 0.78rem;
-  }
-  .cell { padding: 10px 12px; border-right: 1px solid var(--rule); display: grid; gap: 4px; align-content: start; min-width: 0; }
-  .cell:last-child { border-right: 0; }
-  .cell small { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-  .cell strong { font-family: var(--display); font-size: 1rem; letter-spacing: -0.02em; }
-  .cell a, .cell span { overflow-wrap: anywhere; }
-  .row { display: flex; gap: 14px; }
-
   @media (max-width: 760px) {
     .colophon { grid-template-columns: 1fr; }
-    .tblock { grid-template-columns: 1fr 1fr; }
-    .cell { border-bottom: 1px solid var(--rule); }
-    .cell.wide { grid-column: 1 / -1; border-right: 0; }
-    .cell:nth-child(3) { border-right: 0; }
-    .cell:nth-child(n + 4) { border-bottom: 0; }
   }
 </style>

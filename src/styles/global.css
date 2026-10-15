@@ -1,6 +1,4 @@
-/* Two looks share one stylesheet while Dylan decides between them.
-   html[data-look="editorial"] (the default) reads like a magazine profile;
-   html[data-look="spec"] reads like a clean engineering drawing.
+/* Editorial: the site reads like a magazine profile.
    Everything visual hangs off the tokens below. */
 :root {
   /* Editorial: warm newsprint, ink and one cobalt accent. */
@@ -20,47 +18,15 @@
   --max: 1120px;
   --display: 'Instrument Serif', Georgia, serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   --heading-weight: 400;
   --heading-tracking: -0.012em;
   --h1: clamp(3rem, 7.2vw, 5.8rem);
   --h2: clamp(2rem, 3.6vw, 2.8rem);
   --h3: 1.55rem;
-  --label-font: var(--sans);
   --label-size: 0.72rem;
   --label-tracking: 0.16em;
   color-scheme: light;
 }
-
-html[data-look='spec'] {
-  /* Spec Sheet: drafting paper, graphite ink, one safety-orange accent. */
-  --bg: #f4f3ef;
-  --surface: #fbfaf7;
-  --text: #151515;
-  --muted: #67655f;
-  --border: #d7d4cc;
-  --rule: #151515;
-  --accent: #e2562b;
-  --on-accent: #ffffff;
-  --accent-soft: #f8e4db;
-  --glow-1: #f8e4db;
-  --glow-2: #e9e7e1;
-  --radius: 2px;
-  --pill: 2px;
-  --display: 'Inter Tight', 'Inter', system-ui, sans-serif;
-  --heading-weight: 700;
-  --heading-tracking: -0.035em;
-  --h1: clamp(2.6rem, 6vw, 4.6rem);
-  --h2: clamp(1.6rem, 3vw, 2.2rem);
-  --h3: 1.2rem;
-  --label-font: var(--mono);
-  --label-size: 0.74rem;
-  --label-tracking: 0.06em;
-}
-
-/* Show a block in one look only. */
-html:not([data-look='spec']) .only-spec,
-html[data-look='spec'] .only-ed { display: none !important; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -87,7 +53,6 @@ h1 { font-size: var(--h1); line-height: 0.98; }
 h2 { font-size: var(--h2); }
 h3 { font-size: var(--h3); }
 h1 em, h2 em { font-style: italic; color: var(--accent); }
-html[data-look='spec'] h1 em, html[data-look='spec'] h2 em { font-style: normal; }
 
 p { margin: 0 0 1em; }
 
@@ -106,7 +71,7 @@ img { max-width: 100%; height: auto; }
 
 /* Small all-caps label above a heading */
 .eyebrow, .label {
-  font-family: var(--label-font);
+  font-family: var(--sans);
   font-size: var(--label-size);
   font-weight: 600;
   letter-spacing: var(--label-tracking);
@@ -114,18 +79,10 @@ img { max-width: 100%; height: auto; }
   color: var(--accent);
   margin-bottom: 0.9rem;
 }
-html[data-look='spec'] .eyebrow {
-  font-weight: 500;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-html[data-look='spec'] .eyebrow::before { content: ''; width: 18px; height: 2px; background: var(--accent); flex: none; }
 
 .muted { color: var(--muted); }
 
-/* Buttons: square, ink-on-paper in both looks */
+/* Buttons: square, ink on paper */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -144,14 +101,6 @@ html[data-look='spec'] .eyebrow::before { content: ''; width: 18px; height: 2px;
 .btn:hover { background: var(--text); color: var(--bg); text-decoration: none; }
 .btn.primary { background: var(--text); border-color: var(--text); color: var(--bg); }
 .btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-html[data-look='spec'] .btn {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.85rem 1.1rem;
-}
-html[data-look='spec'] .btn:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 .tag {
   display: inline-block;
@@ -163,7 +112,6 @@ html[data-look='spec'] .btn:hover { background: var(--accent); border-color: var
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-html[data-look='spec'] .tag { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; border-color: var(--rule); color: var(--text); }
 
 .grid {
   display: grid;
@@ -171,7 +119,7 @@ html[data-look='spec'] .tag { font-family: var(--mono); font-size: 0.7rem; text-
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
 
-/* Cards. Editorial: open, ruled like a magazine column. Spec: a boxed part. */
+/* Cards: open, ruled like a magazine column. */
 .card {
   position: relative;
   display: flex;
@@ -187,16 +135,6 @@ html[data-look='spec'] .tag { font-family: var(--mono); font-size: 0.7rem; text-
 .card p { margin: 0; color: var(--muted); font-size: 0.97rem; }
 a.card:hover h3 { color: var(--accent); }
 .card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 0.5rem; }
-html[data-look='spec'] .grid { gap: 16px; }
-html[data-look='spec'] .card {
-  padding: 22px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-html[data-look='spec'] a.card:hover { box-shadow: 6px 6px 0 var(--accent); transform: translate(-2px, -2px); }
-html[data-look='spec'] a.card:hover h3 { color: inherit; }
 
 .card .arrow {
   position: absolute;
@@ -207,7 +145,6 @@ html[data-look='spec'] a.card:hover h3 { color: inherit; }
   transform: translate(-6px, 6px);
   transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.2,.8,.2,1);
 }
-html[data-look='spec'] .card .arrow { top: 18px; right: 20px; }
 a.card:hover .arrow, a.card:focus-visible .arrow { opacity: 1; transform: none; }
 
 .section { padding: 64px 0; }
@@ -224,8 +161,6 @@ a.card:hover .arrow, a.card:focus-visible .arrow { opacity: 1; transform: none; 
 .section-head h2 { margin: 0; }
 .section-head a { color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
 .section-head a:hover { color: var(--accent); }
-html[data-look='spec'] .section-head { border-top-width: 1.5px; }
-html[data-look='spec'] .section-head a { font-family: var(--mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .prose { max-width: 700px; }
 .prose h2 { margin-top: 1.6em; }
