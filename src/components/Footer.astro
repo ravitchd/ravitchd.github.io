@@ -4,20 +4,40 @@ const year = new Date().getFullYear();
 ---
 
 <footer>
-  <div class="container row">
-    <span class="muted">© {year} {SITE.name}</span>
-    <div class="links">
-      {SITE.github && <a href={SITE.github}>GitHub</a>}
-      {SITE.linkedin && <a href={SITE.linkedin}>LinkedIn</a>}
-      {SITE.email && <a href={`mailto:${SITE.email}`}>Email</a>}
+  <div class="container">
+    <div class="colophon">
+      <a class="sign" href="/">{SITE.name}</a>
+      <p>{SITE.role} in {SITE.location}. Set in Instrument Serif and Inter.</p>
+      <div class="links">
+        {SITE.email && <a href={`mailto:${SITE.email}`}>Email</a>}
+        {SITE.github && <a href={SITE.github}>GitHub</a>}
+        {SITE.linkedin && <a href={SITE.linkedin}>LinkedIn</a>}
+        <a href={SITE.resumePdf}>Resume (PDF)</a>
+      </div>
+      <span class="muted small">© {year}</span>
     </div>
   </div>
 </footer>
 
 <style>
-  footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 28px 0; font-size: 0.9rem; }
-  .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .links { display: flex; gap: 18px; }
-  .links a { color: var(--muted); text-decoration: none; }
-  .links a:hover { color: var(--accent); }
+  footer { margin-top: 64px; padding: 0 0 40px; font-size: 0.92rem; }
+  a { color: var(--text); text-decoration: none; }
+  a:hover { color: var(--accent); }
+  .small { font-size: 0.85rem; }
+
+  .colophon {
+    border-top: 1px solid var(--rule);
+    padding-top: 28px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: baseline;
+    gap: 12px 36px;
+  }
+  .sign { font-family: var(--display); font-size: 2.2rem; line-height: 1; }
+  .colophon p { margin: 0; color: var(--muted); }
+  .links { display: flex; gap: 20px; flex-wrap: wrap; font-weight: 500; }
+
+  @media (max-width: 760px) {
+    .colophon { grid-template-columns: 1fr; }
+  }
 </style>

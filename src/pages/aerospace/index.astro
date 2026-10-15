@@ -92,7 +92,7 @@ const items = (await getCollection('aerospace')).sort(
   .tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.1rem 0 0; padding: 0; list-style: none; }
   .tools li {
     padding: 0.25rem 0.7rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--surface);
     font-size: 0.82rem;
@@ -122,7 +122,7 @@ const items = (await getCollection('aerospace')).sort(
       var(--surface);
   }
   .blank span {
-    font-family: var(--serif);
+    font-family: var(--display);
     font-size: clamp(1.4rem, 3vw, 2rem);
     color: var(--accent);
   }

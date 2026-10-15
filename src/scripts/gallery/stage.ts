@@ -302,6 +302,7 @@ export async function createStage(o: StageOptions): Promise<Stage> {
   readTheme();
   const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
   darkQuery.addEventListener('change', () => requestAnimationFrame(readTheme));
+  window.addEventListener('themechange', () => requestAnimationFrame(readTheme));
 
   const geo = new PlaneGeometry(1, 1, small ? 8 : 12, small ? 10 : 16);
   const makeMaterial = (dish: number) =>

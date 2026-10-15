@@ -1,61 +1,34 @@
-// Home page motion: portrait tilt with parallax chips and count-up stats.
-// All of it is skipped for reduced motion.
+// Home page motion: a photo preview follows the cursor over the contents
+// list. Skipped without a fine pointer.
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-function initTilt() {
-  const wrap = document.querySelector<HTMLElement>('[data-tilt]');
-  if (!wrap || reduceMotion || !finePointer) return;
-  const card = wrap.querySelector<HTMLElement>('.portrait')!;
-  const chips = [...wrap.querySelectorAll<HTMLElement>('[data-depth]')];
-  const hero = wrap.closest('section') ?? wrap;
-
-  hero.addEventListener('pointermove', (e) => {
-    const r = wrap.getBoundingClientRect();
-    const x = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width * 1.2)));
-    const y = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (r.height * 1.2)));
-    card.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 8}deg)`;
-    for (const c of chips) {
-      const d = Number(c.dataset.depth) || 0;
-      c.style.transform = `translate(${x * d * 0.5}px, ${y * d * 0.4}px)`;
-    }
-  });
-  hero.addEventListener('pointerleave', () => {
-    card.style.transform = '';
-    chips.forEach((c) => (c.style.transform = ''));
+function initPeek() {
+  const box = document.querySelector<HTMLElement>('.peek');
+  const img = box?.querySelector('img');
+  if (!box || !img || !finePointer) return;
+  let x = 0, y = 0, px = 0, py = 0, raf = 0;
+  const follow = () => {
+    px += (x - px) * (reduceMotion ? 1 : 0.18);
+    py += (y - py) * (reduceMotion ? 1 : 0.18);
+    box.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+    raf = Math.abs(x - px) + Math.abs(y - py) > 0.5 ? requestAnimationFrame(follow) : 0;
+  };
+  document.querySelectorAll<HTMLElement>('[data-peek]').forEach((el) => {
+    el.addEventListener('pointerenter', (e) => {
+      img.src = el.dataset.peek!;
+      x = px = e.clientX;
+      y = py = e.clientY;
+      box.classList.add('on');
+    });
+    el.addEventListener('pointerleave', () => box.classList.remove('on'));
+    el.addEventListener('pointermove', (e) => {
+      x = e.clientX;
+      y = e.clientY;
+      if (!raf) raf = requestAnimationFrame(follow);
+    });
   });
 }
 
-
-function initCounters() {
-  const els = document.querySelectorAll<HTMLElement>('[data-count]');
-  if (reduceMotion || !('IntersectionObserver' in window)) return;
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        io.unobserve(e.target);
-        const el = e.target as HTMLElement;
-        const end = Number(el.dataset.count);
-        const start = end > 1000 ? end - 25 : 0; // years count up from just before
-        const t0 = performance.now();
-        const dur = 1400;
-        const step = (now: number) => {
-          const p = Math.min(1, (now - t0) / dur);
-          const eased = 1 - Math.pow(1 - p, 4);
-          el.textContent = String(Math.round(start + (end - start) * eased));
-          if (p < 1) requestAnimationFrame(step);
-        };
-        el.textContent = String(start);
-        requestAnimationFrame(step);
-      }
-    },
-    { threshold: 0.6 },
-  );
-  els.forEach((el) => io.observe(el));
-}
-
-
-initTilt();
-initCounters();
+initPeek();

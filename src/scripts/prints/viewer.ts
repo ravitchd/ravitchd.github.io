@@ -144,9 +144,9 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   scene.add(nozzle);
 
   const applyColors = () => {
-    const accent = cssColor('--accent', '#2f5d50');
-    const text = cssColor('--text', '#1c1b19');
-    const bg = cssColor('--bg', '#fbfaf7');
+    const accent = cssColor('--accent', '#2340d8');
+    const text = cssColor('--text', '#17140f');
+    const bg = cssColor('--bg', '#f1ede4');
     material.color.copy(accent).lerp(new THREE.Color(0xffffff), 0.12);
     capMaterial.color.set(0xff8a3d);
     tipMaterial.color.set(0xffb070);
@@ -156,10 +156,12 @@ export async function mountPrint(canvas: HTMLCanvasElement, opts: Options): Prom
   };
   applyColors();
   const scheme = window.matchMedia('(prefers-color-scheme: dark)');
-  scheme.addEventListener('change', () => {
+  const recolor = () => {
     applyColors();
     requestRender();
-  });
+  };
+  scheme.addEventListener('change', recolor);
+  window.addEventListener('themechange', recolor);
 
   // Camera: three-quarter view from above, framed to the part.
   const target = new THREE.Vector3(0, height * 0.4, 0);
