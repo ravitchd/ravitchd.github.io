@@ -24,14 +24,4 @@ function initHeader() {
   );
 }
 
-/* ---------- A hello for anyone who opens devtools ---------- */
-function hello() {
-  console.log(
-    '%cHey there 👋%c\nIf you are poking around in here, we would probably get along.\nSource: https://github.com/ravitchd/ravitchd.github.io',
-    'font: 700 18px system-ui, sans-serif; color: #161615',
-    'font: 13px system-ui; color: inherit',
-  );
-}
-
 initHeader();
-hello();

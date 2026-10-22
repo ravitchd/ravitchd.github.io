@@ -23,7 +23,7 @@ const facts = [
 <Base title={title} description={description ?? `${title}: ${summary(recipe)}.`}>
   <article class="section">
     <div class="container">
-      <a class="back" href={`/recipes/#${category}`}>← The menu</a>
+      <a class="back" href={`/recipes/#${category}`}>← All recipes</a>
       <header class="head">
         <p class="eyebrow">{CATEGORY_LABEL[category]}</p>
         <h1 style={`view-transition-name: r-${recipe.id}`}>{title}</h1>
@@ -60,8 +60,8 @@ const facts = [
             </div>
           )
         }
-        <button class="btn primary" id="cook" type="button" data-magnetic>
-          <span aria-hidden="true">▶</span> Start cooking
+        <button class="btn primary" id="cook" type="button">
+          Cook mode
         </button>
       </div>
 
