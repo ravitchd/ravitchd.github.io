@@ -8,7 +8,7 @@ const recipes = (await getCollection('recipes')).sort((a, b) => a.data.title.loc
 const ids = new Set(recipes.map((r) => r.id));
 const titles = new Map(recipes.map((r) => [r.id, r.data.title]));
 
-const sections = CATEGORIES.map((c, i) => {
+const sections = CATEGORIES.map((c) => {
   const written = recipes.filter((r) => r.data.category === c.id);
   const groups = MENU[c.id].map((g) => ({
     title: g.title,
@@ -18,7 +18,7 @@ const sections = CATEGORIES.map((c, i) => {
       .filter((it) => !it.recipe || titles.get(it.recipe) !== it.name),
   }));
   const soon = groups.reduce((n, g) => n + g.items.filter((it) => !it.recipe).length, 0);
-  return { ...c, n: String(i + 1).padStart(2, '0'), written, groups, soon };
+  return { ...c, written, groups, soon };
 });
 
 const totalSoon = sections.reduce((n, s) => n + s.soon, 0);
@@ -64,8 +64,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     sections.map((s) => (
       <section class="course" id={s.id} data-section>
         <div class="container">
-          <header class="course-head" data-reveal>
-            <span class="num" aria-hidden="true">{s.n}</span>
+          <header class="course-head">
             <h2>{s.label}</h2>
             <span class="muted">
               {s.written.length} written up{s.soon > 0 && ` · ${s.soon} on the way`}
@@ -76,7 +75,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
 
           {
             s.soon > 0 && (
-              <div class="board" data-reveal>
+              <div class="board">
                 <p class="board-title">Also on the menu <span class="muted">· recipes coming soon</span></p>
                 {s.groups.map((g) => (
                   <div class="board-group">
@@ -308,14 +307,6 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     border-bottom: 1px solid var(--border);
   }
   .course-head h2 { margin: 0; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -0.02em; }
-  .num {
-    font-family: var(--display);
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 600;
-    line-height: 1;
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--accent);
-  }
   .course-head .muted { margin-left: auto; font-size: 0.9rem; }
 
   :global(.recipe[hidden]) { display: none; }

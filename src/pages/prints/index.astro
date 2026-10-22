@@ -18,10 +18,10 @@ const renders = parts.filter((p) => p !== featured);
 <Base title="3D Design & Printing" description="Parts Dylan has designed in CAD and 3D printed, with live 3D models and the files.">
   <section class="section">
     <div class="container">
-      <p class="eyebrow" data-reveal>3D design &amp; printing</p>
-      <h1 data-reveal style="--d:1">Designed, modeled, printed</h1>
-      <p class="lead muted" data-reveal style="--d:2">
-        Parts I've designed in SolidWorks and brought to life on the printer. Spin the 3D models, or grab the files.
+      <p class="eyebrow">3D design &amp; printing</p>
+      <h1>Parts I've modeled</h1>
+      <p class="lead muted">
+        Parts I've designed in CAD, several of them 3D printed. Spin the models, or grab the files.
       </p>
 
       <div class="list">
@@ -34,7 +34,7 @@ const renders = parts.filter((p) => p !== featured);
               d.printTime && ['Print time', d.printTime],
             ].filter(Boolean) as [string, string][];
             return (
-              <a class="card print" href={`/prints/${p.id}/`} data-reveal style={`--d:${i + 3}`}>
+              <a class="card print" href={`/prints/${p.id}/`} style={`--d:${i + 3}`}>
                 <PrintStage model={d.model!} title={d.title} layerHeight={d.layerHeight} />
                 <div class="body">
                   {d.example && <span class="flag">Example entry</span>}
@@ -62,13 +62,13 @@ const renders = parts.filter((p) => p !== featured);
       {
         renders.length > 0 && (
           <>
-            <div class="section-head models-head" data-reveal>
+            <div class="section-head models-head">
               <h2>More models</h2>
               <a href="https://github.com/ravitchd/Solidworks">All files on GitHub ↗</a>
             </div>
             <div class="grid">
               {renders.map((p, i) => (
-                <a class="card model" href={`/prints/${p.id}/`} data-reveal style={`--d:${i % 3}`}>
+                <a class="card model" href={`/prints/${p.id}/`} style={`--d:${i % 3}`}>
                   {p.data.model ? (
                     <PrintStage model={p.data.model} title={p.data.title} layerHeight={p.data.layerHeight} />
                   ) : (
@@ -86,7 +86,7 @@ const renders = parts.filter((p) => p !== featured);
           </>
         )
       }
-      <p class="more muted" data-reveal>
+      <p class="more muted">
         Rockets and flight hardware live on the <a href="/aerospace/">Aerospace</a> page.
       </p>
     </div>
