@@ -29,17 +29,13 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   <section class="intro">
     <div class="container">
       <p class="eyebrow">Recipes</p>
-      <h1 class="title">The <em>Menu</em></h1>
+      <h1 class="title">Recipes</h1>
       <div class="stats">
         <div><strong data-count={recipes.length}>{recipes.length}</strong><span>recipes written up</span></div>
         <div><strong data-count={totalSoon}>{totalSoon}</strong><span>more on the way</span></div>
         <button class="btn primary surprise" id="surprise" type="button" data-picks={JSON.stringify(pick)}>
-          <svg class="die" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="1.8" /><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" /><circle cx="15.5" cy="8.5" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="8.5" cy="15.5" r="1.6" fill="currentColor" /><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor" /></svg> Surprise me
+          Random recipe
         </button>
-      </div>
-      <div class="reel" id="reel" hidden aria-live="polite">
-        <span class="reel-label">Tonight:</span>
-        <a class="reel-name" id="reel-name" href="#"></a>
       </div>
     </div>
 
@@ -47,7 +43,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
 
   <div class="toolbar">
     <div class="container bar">
-      <input id="q" type="search" placeholder="Search the menu…" aria-label="Search the menu" autocomplete="off" />
+      <input id="q" type="search" placeholder="Search recipes…" aria-label="Search recipes" autocomplete="off" />
       <nav class="chips" aria-label="Jump to a section">
         {
           sections.map((s) => (
@@ -76,7 +72,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
           {
             s.soon > 0 && (
               <div class="board">
-                <p class="board-title">Also on the menu <span class="muted">· recipes coming soon</span></p>
+                <p class="board-title">Not written up yet</p>
                 {s.groups.map((g) => (
                   <div class="board-group">
                     {g.title && <h3>{g.title}</h3>}
@@ -110,7 +106,7 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   }
 
   <div class="container">
-    <p id="empty" class="muted empty" hidden>Nothing on the menu matches that.</p>
+    <p id="empty" class="muted empty" hidden>No recipes match that search.</p>
   </div>
 </Base>
 
@@ -172,42 +168,11 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
   );
   sections.forEach((s) => io.observe(s));
 
-  /* ---- Surprise me: spin through recipe names, land on one ---- */
+  /* ---- Random recipe: open one of the written-up recipes ---- */
   const btn = document.getElementById('surprise') as HTMLButtonElement;
-  const reel = document.getElementById('reel')!;
-  const name = document.getElementById('reel-name') as HTMLAnchorElement;
   const picks: { title: string; href: string }[] = JSON.parse(btn.dataset.picks!);
-  let last = -1;
   btn.addEventListener('click', () => {
-    let pick = Math.floor(Math.random() * picks.length);
-    if (pick === last && picks.length > 1) pick = (pick + 1) % picks.length;
-    last = pick;
-    reel.hidden = false;
-    btn.disabled = true;
-    btn.classList.add('rolling');
-    const land = () => {
-      name.textContent = picks[pick].title;
-      name.href = picks[pick].href;
-      name.classList.remove('spin');
-      name.classList.add('landed');
-      btn.disabled = false;
-      btn.classList.remove('rolling');
-      name.focus({ preventScroll: true });
-    };
-    if (reduce) return land();
-    name.classList.remove('landed');
-    let i = 0;
-    const spins = 14 + Math.floor(Math.random() * 6);
-    const step = () => {
-      if (i >= spins) return land();
-      name.textContent = picks[(pick + spins - i) % picks.length].title;
-      name.classList.remove('spin');
-      void name.offsetWidth;
-      name.classList.add('spin');
-      i++;
-      setTimeout(step, 40 + i * i * 1.1);
-    };
-    step();
+    window.location.href = picks[Math.floor(Math.random() * picks.length)].href;
   });
 </script>
 
@@ -219,42 +184,11 @@ const pick = recipes.map((r) => ({ title: r.data.title, href: `/recipes/${r.id}/
     letter-spacing: -0.035em;
     margin: 0 0 28px;
   }
-  .title em {
-    font-style: normal;
-    color: var(--accent);
-  }
   .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 40px; }
   .stats div { display: flex; flex-direction: column; }
   .stats strong { font-family: var(--display); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
   .stats span { color: var(--muted); font-size: 0.9rem; }
   .surprise { font-size: 1rem; padding: 0.8rem 1.4rem; }
-  .surprise:disabled { cursor: progress; }
-  .die { display: block; }
-  .surprise.rolling .die { animation: roll 0.5s linear infinite; }
-  @keyframes roll { to { transform: rotate(360deg); } }
-
-  .reel {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    margin-top: 22px;
-    min-height: 2.6rem;
-  }
-  .reel[hidden] { display: none; }
-  .reel-label { color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
-  .reel-name {
-    font-family: var(--display);
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    font-weight: 600;
-    text-decoration: none;
-    color: var(--text);
-  }
-  .reel-name.spin { animation: tick 0.12s ease-out; }
-  .reel-name.landed { color: var(--accent); animation: land 0.5s cubic-bezier(.2,1.6,.4,1); }
-  .reel-name.landed::after { content: ' →'; }
-  @keyframes tick { from { transform: translateY(-40%); opacity: 0.2; } }
-  @keyframes land { from { transform: scale(0.85); } }
 
 
   .toolbar {

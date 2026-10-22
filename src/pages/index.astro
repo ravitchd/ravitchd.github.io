@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { Picture, getImage } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import { SITE } from '../site';
 import portrait from '../assets/dylan-portrait.jpg';
 import fishing from '../assets/dylan-fishing.jpg';
@@ -16,22 +16,16 @@ const kitchen = dishes.slice(0, 4);
 
 const year = (d: Date) => d.getUTCFullYear();
 
-// Small hover previews for the list of sections
-const peek = async (src: ImageMetadata) => (await getImage({ src, width: 480, format: 'webp' })).src;
-const pizzaPeek = dishes[0] ? await peek(dishes[0].data.image) : undefined;
-const menuPeek = dishes[1] ? await peek(dishes[1].data.image) : undefined;
-
 const stories = [
   ...allProjects.filter((p) => p.data.featured).map((p) => ({
     href: `/projects/${p.id}/`,
     title: p.data.title,
     dek: p.data.summary,
     when: String(year(p.data.date)),
-    peek: undefined as string | undefined,
   })),
-  { href: '/prints/', title: 'Parts on the bench', dek: 'Live 3D models of parts I have designed, from an M6 bolt to my capstone container.', when: '3D Design', peek: undefined },
-  { href: '/recipes/', title: 'The menu', dek: `${recipeCount} of my recipes written up so far, and a long list still to write.`, when: 'Kitchen', peek: menuPeek },
-  { href: '/gallery/', title: 'The gallery', dek: 'Photos of what I have cooked, from Neapolitan pizza to taquitos.', when: 'Kitchen', peek: pizzaPeek },
+  { href: '/prints/', title: '3D models', dek: 'Parts I have designed in CAD, from an M6 bolt to my capstone container, viewable in 3D.', when: '3D Design' },
+  { href: '/aerospace/', title: 'Rockets', dek: 'Full 3D assemblies of the Spaceport America Cup rocket and a test rocket.', when: 'Aerospace' },
+  { href: '/recipes/', title: 'Recipes', dek: `${recipeCount} of my recipes, written up with ingredients and steps.`, when: 'Cooking' },
 ];
 
 const firstName = SITE.name.split(' ')[0];
@@ -48,7 +42,7 @@ const now = experience[0];
       <div class="spread">
         <div class="dekcol">
           <p class="dek">
-            I route high-pressure and hazardous gas through chip fabs. At home, I make a lot of pizza.
+            I design fluid delivery systems for semiconductor fabs.
           </p>
           <dl class="facts">
             <div><dt>Now</dt><dd>{now.role}, {now.org}</dd></div>
@@ -65,12 +59,11 @@ const now = experience[0];
             alt="Dylan in a dark suit and patterned tie, checking his watch"
             loading="eager"
           />
-          <figcaption><b>Fig. 1</b> Dylan, on time.</figcaption>
         </figure>
         <div class="body">
           <p>
-            I design fluid delivery systems for semiconductor fabrication facilities: high-pressure and hazardous gas
-            routing, pipe classes picked for chemical compatibility, and the constructability reviews that keep it all buildable.
+            At SSOE I route high-pressure and hazardous gas for semiconductor fabrication facilities, choose pipe classes
+            and materials for chemical compatibility, and take part in constructability reviews.
           </p>
           <p>
             Before that I grew silicon ingots in vacuum furnaces, drew sheet metal for Intel and LAM Research, and helped
@@ -85,13 +78,12 @@ const now = experience[0];
     </div>
 
     <section class="container toc-wrap">
-      <p class="eyebrow">Around the site</p>
-      <div class="head"><h2>Work, rockets, parts and dinner</h2></div>
+      <div class="head"><h2>Selected work</h2></div>
       <ul class="toc">
         {
           stories.map((s) => (
             <li>
-              <a href={s.href} data-peek={s.peek}>
+              <a href={s.href}>
                 <span class="t">
                   <h3>{s.title}</h3>
                   <p>{s.dek}</p>
@@ -102,7 +94,6 @@ const now = experience[0];
           ))
         }
       </ul>
-      <div class="peek" aria-hidden="true"><img alt="" /></div>
     </section>
 
     <section class="container feature">
@@ -114,26 +105,25 @@ const now = experience[0];
           formats={['avif', 'webp']}
           alt="Dylan in a green rain jacket fishing from a beach while an aircraft carrier passes in the fog"
         />
-        <figcaption><b>Fig. 2</b> Waiting on a bite while an aircraft carrier slides past in the fog.</figcaption>
+        <figcaption>Fishing from the beach as an aircraft carrier passes in the fog.</figcaption>
       </figure>
       <div class="feature-copy">
-        <p class="eyebrow">Off the clock</p>
-        <h2>Fishing, and a lot of pizza.</h2>
-        <p class="lead">When I'm not routing gas lines, I'm on the beach with a rod or at the counter with a pizza peel.</p>
+        <p class="eyebrow">Outside work</p>
+        <h2>Fishing and cooking</h2>
+        <p class="lead">I fish, and I cook a lot, mostly pizza.</p>
         <p>
-          {recipeCount} of my recipes are written up on this site so far, from bagels to lasagna, with dozens more on
-          the list.
+          {recipeCount} of my recipes are written up on this site so far, from bagels to lasagna, along with photos of
+          dishes I have made.
         </p>
         <div class="cta">
-          <a class="btn" href="/recipes/">Open the menu</a>
-          <a class="more" href="/gallery/">See the gallery →</a>
+          <a class="btn" href="/recipes/">Recipes</a>
+          <a class="more" href="/gallery/">Gallery →</a>
         </div>
       </div>
     </section>
 
     <section class="container kitchen">
-      <p class="eyebrow">Kitchen</p>
-      <div class="head"><h2>From my kitchen</h2><a href="/gallery/">Gallery →</a></div>
+      <div class="head"><h2>A few dishes</h2><a href="/gallery/">Gallery →</a></div>
       <div class="plates">
         {
           kitchen.map((d, i) => (
@@ -148,10 +138,6 @@ const now = experience[0];
   </div>
 
 </Base>
-
-<script>
-  import '../scripts/home';
-</script>
 
 <style>
   .ed { padding-top: 6px; }
@@ -181,16 +167,7 @@ const now = experience[0];
   .cover { margin: 0; }
   .cover :global(img) { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
   figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
-  figcaption b { color: var(--text); font-weight: 600; margin-right: 6px; }
   .body p { line-height: 1.7; font-size: 1.02rem; }
-  .body p:first-child::first-letter {
-    float: left;
-    font-family: var(--display);
-    font-size: 5.1rem;
-    line-height: 0.76;
-    padding: 8px 10px 0 0;
-    color: var(--accent);
-  }
   .cta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 24px; }
   .more { color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--rule); padding-bottom: 2px; }
   .more:hover { color: var(--accent); border-color: var(--accent); }
@@ -219,22 +196,6 @@ const now = experience[0];
   .toc h3 { font-size: clamp(1.8rem, 3.8vw, 3rem); line-height: 1; margin: 0; }
   .toc p { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; max-width: 42rem; }
   .toc .when { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
-  .peek {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 30;
-    width: 220px;
-    aspect-ratio: 4 / 5;
-    pointer-events: none;
-    opacity: 0;
-    scale: 0.85;
-    translate: -50% -55%;
-    transition: opacity 0.2s ease, scale 0.25s cubic-bezier(.2,.8,.2,1);
-    box-shadow: 0 24px 60px rgb(0 0 0 / 0.22);
-  }
-  .peek:global(.on) { opacity: 1; scale: 1; }
-  .peek img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   .feature { display: grid; grid-template-columns: 420px 1fr; gap: 64px; align-items: center; padding-bottom: 88px; }
   .feature figure { margin: 0; }
